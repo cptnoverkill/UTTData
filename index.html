@@ -17,11 +17,42 @@
             border-collapse: collapse;
             width: 100%;
             background-color: #fff;
+            #tableContainer {
+    overflow-x: auto;  /* Enables horizontal scrolling */
+    overflow-y: hidden; /* Prevents vertical scrolling */
+}
+
+/* CSS for the sticky top row and position column */
+th.position-column, th, td.position-column {
+    background-color: white;  /* Solid background to cover scrolled content */
+    z-index: 2;  /* Ensures it stays above other content */
+}
+
+th.position-column, td.position-column {
+    position: sticky;
+    left: 0;
+}
+
+th {
+    position: sticky;
+    top: 0;
+}
+
+
+            /* CSS for the sticky column */
+th.position-column, td.position-column {
+    position: sticky;
+    left: 0;
+    background-color: white;  /* Ensure the background is solid so text from scrolled columns doesn't show through */
+    z-index: 2;  /* Make sure the sticky column is above horizontally scrolled content */
+}
+
         }
         th, td {
             border: 1px solid #333;
             padding: 8px;
             text-align: center;
+            min-width: 50px;
         }
         th {
             background-color: #4CAF50;
@@ -190,64 +221,50 @@
         });
 
         function generateLabel(index) {
-            const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-            let label = '';
-            
-            if (index < 26) {
-                label = alphabet[index];
-            } else {
-                let prefix = Math.floor(index / 26) - 1;
-                let suffix = index % 26;
-                label = alphabet[prefix] + alphabet[suffix];
-            }
-            
-            return label;
-        }
+    let label = '';
+    while (index >= 0) {
+        let remainder = index % 26;
+        label = String.fromCharCode(65 + remainder) + label;
+        index = Math.floor(index / 26) - 1;
+    }
+    return label;
+}
         
-        function generateTable() {
-            const componentName = document.getElementById('componentName').value;
-            const pipeDiameter = parseFloat(document.getElementById('pipeDiameter').value);
-            const axialStart = parseFloat(document.getElementById('axialStart').value);
-            const circumferentialStart = document.getElementById('circumferentialStart').value;
-            const length = parseInt(document.getElementById('length').value);
-            
-            if (!componentName || isNaN(pipeDiameter) || isNaN(axialStart) || !circumferentialStart || isNaN(length)) {
-                alert('Please fill in all fields with valid values.');
-                return;
-            }
-            
-            const circumference = Math.PI * pipeDiameter;
-            const numCircumFields = Math.ceil(circumference);
-            
-            currentComponent = {
-                name: componentName,
-                pipeDiameter: pipeDiameter,
-                axialStart: axialStart,
-                circumferentialStart: circumferentialStart,
-                circumference: circumference,
-                numCircumFields: numCircumFields,
-                length: length,
-                data: {}
-            };
-            
-            let table = '<table><tr><th>Position</th>';
-            for (let i = 1; i <= length; i++) {
-                table += `<th>${i}</th>`;
-            }
-            table += '</tr>';
-            
-            for (let i = 0; i < numCircumFields; i++) {
-                const label = generateLabel(i);
-                table += `<tr><td>${label}</td>`;
-                for (let j = 1; j <= length; j++) {
-                    table += `<td><input type='number' step='1' min='0' required inputmode='numeric' placeholder='-' data-label='${label}' data-number='${j}' onchange='updateData("${label}", ${j}, this.value)'></td>`;
-                }
-                table += '</tr>';
-            }
-            table += '</table>';
-            
-            document.getElementById('tableContainer').innerHTML = table;
+function generateTable() {
+    const componentName = document.getElementById('componentName').value;
+    const pipeDiameter = parseFloat(document.getElementById('pipeDiameter').value);
+    const axialStart = parseFloat(document.getElementById('axialStart').value);
+    const circumferentialStart = document.getElementById('circumferentialStart').value;
+    const length = parseInt(document.getElementById('length').value);  // Number of columns
+    const numRows = Math.ceil(Math.PI * pipeDiameter);  // Calculated number of rows based on circumference
+
+    if (!componentName || isNaN(pipeDiameter) || isNaN(axialStart) || !circumferentialStart || isNaN(length)) {
+        alert('Please fill in all fields with valid values.');
+        return;
+    }
+
+    let table = '<table><tr><th class="position-column">Position</th>';  // Header for the position column
+    for (let i = 1; i <= length; i++) {
+        table += `<th style="position: sticky; top: 0;">${i}</th>`;  // Sticky header cells for each column
+    }
+    table += '</tr>';
+
+    // Generating rows with extended alphabet labels for positions
+    for (let i = 0; i < numRows; i++) {
+        let rowLabel = generateLabel(i);
+        table += `<tr><td class="position-column">${rowLabel}</td>`;  // Sticky column cells with extended labels
+        for (let j = 1; j <= length; j++) {
+            table += `<td><input type='number' step='1' min='0' required inputmode='numeric' placeholder='-' data-label='${rowLabel}' data-number='${j}' onchange='updateData("${rowLabel}", ${j}, this.value)'></td>`;
         }
+        table += '</tr>';
+    }
+    table += '</table>';
+
+    document.getElementById('tableContainer').innerHTML = table;
+}
+
+
+
 
         function updateData(label, number, value) {
             const cellSelector = `input[data-label='${label}'][data-number='${number}']`;
