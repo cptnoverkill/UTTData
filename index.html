@@ -17,36 +17,6 @@
             border-collapse: collapse;
             width: 100%;
             background-color: #fff;
-            #tableContainer {
-    overflow-x: auto;  /* Enables horizontal scrolling */
-    overflow-y: hidden; /* Prevents vertical scrolling */
-}
-
-/* CSS for the sticky top row and position column */
-th.position-column, th, td.position-column {
-    background-color: white;  /* Solid background to cover scrolled content */
-    z-index: 2;  /* Ensures it stays above other content */
-}
-
-th.position-column, td.position-column {
-    position: sticky;
-    left: 0;
-}
-
-th {
-    position: sticky;
-    top: 0;
-}
-
-
-            /* CSS for the sticky column */
-th.position-column, td.position-column {
-    position: sticky;
-    left: 0;
-    background-color: white;  /* Ensure the background is solid so text from scrolled columns doesn't show through */
-    z-index: 2;  /* Make sure the sticky column is above horizontally scrolled content */
-}
-
         }
         th, td {
             border: 1px solid #333;
@@ -58,6 +28,17 @@ th.position-column, td.position-column {
             background-color: #4CAF50;
             color: white;
             font-weight: bold;
+        }
+        th.position-column, td.position-column {
+            position: sticky;
+            left: 0;
+            background-color: white;
+            z-index: 1;
+        }
+        th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
         }
         input[type="number"], input[type="text"], input[list], input[type="time"] {
             width: 100%;
@@ -135,45 +116,50 @@ th.position-column, td.position-column {
             <label for="pipeDiameter">Pipe Diameter (inches):</label>
             <input list="pipe-diameters" id="pipeDiameter" required placeholder="Choose diameter...">
             <datalist id="pipe-diameters">
-                    <option value="1.050"></option>
-                    <option value="1.315"></option>
-                    <option value="1.660"></option>
-                    <option value="1.900"></option>
-                    <option value="1.500"></option>
-                    <option value="2.375"></option>
-                    <option value="2.875"></option>
-                    <option value="3.500"></option>
-                    <option value="4.000"></option>
-                    <option value="4.500"></option>
-                    <option value="5.563"></option>
-                    <option value="6.625"></option>
-                    <option value="8.625"></option>
-                    <option value="10.750"></option>
-                    <option value="12.750"></option>
-                    <option value="14.000"></option>
-                    <option value="16.000"></option>
-                    <option value="18.000"></option>
-                    <option value="20.000"></option>
-                    <option value="22.000"></option>
-                    <option value="24.000"></option>
-                    <option value="26.000"></option>
-                    <option value="28.000"></option>
-                    <option value="30.000"></option>
-                    <option value="32.000"></option>
-                    <option value="34.000"></option>
-                    <option value="36.000"></option>
-                    <option value="38.000"></option>
-                    <option value="40.000"></option>
-                    <option value="42.000"></option>
-                    <option value="44.000"></option>
-                    <option value="46.000"></option>
-                    <option value="48.000"></option>
-                    <option value="52.000"></option>
-                    <option value="54.000"></option>
-                    <option value="56.000"></option>
-                    <option value="60.000"></option>
-                </datalist>
+                <option value="1.050">
+                <option value="1.315">
+                <option value="1.660">
+                <option value="1.900">
+                <option value="1.500">
+                <option value="2.375">
+                <option value="2.875">
+                <option value="3.500">
+                <option value="4.000">
+                <option value="4.500">
+                <option value="5.563">
+                <option value="6.625">
+                <option value="8.625">
+                <option value="10.750">
+                <option value="12.750">
+                <option value="14.000">
+                <option value="16.000">
+                <option value="18.000">
+                <option value="20.000">
+                <option value="22.000">
+                <option value="24.000">
+                <option value="26.000">
+                <option value="28.000">
+                <option value="30.000">
+                <option value="32.000">
+                <option value="34.000">
+                <option value="36.000">
+                <option value="38.000">
+                <option value="40.000">
+                <option value="42.000">
+                <option value="44.000">
+                <option value="46.000">
+                <option value="48.000">
+                <option value="52.000">
+                <option value="54.000">
+                <option value="56.000">
+                <option value="60.000">
+            </datalist>
         </div>
+        <div>
+            <label for="wallThickness">Nominal Wall Thickness (inches):</label>
+            <input type="number" id="wallThickness" min="0.001" step="0.001" inputmode="decimal" required>
+        </div>
+        
         <div>
             <label for="axialStart">Axial Start (inches):</label>
             <input type="number" id="axialStart" min="0" step="0.1" inputmode="decimal" required>
@@ -216,77 +202,84 @@ th.position-column, td.position-column {
     <script>
         let currentComponent = null;
 
-        document.addEventListener('DOMContentLoaded', function() {
-            updateSavedList();
-        });
-
         function generateLabel(index) {
-    let label = '';
-    while (index >= 0) {
-        let remainder = index % 26;
-        label = String.fromCharCode(65 + remainder) + label;
-        index = Math.floor(index / 26) - 1;
-    }
-    return label;
-}
-        
-function generateTable() {
-    const componentName = document.getElementById('componentName').value;
-    const pipeDiameter = parseFloat(document.getElementById('pipeDiameter').value);
-    const axialStart = parseFloat(document.getElementById('axialStart').value);
-    const circumferentialStart = document.getElementById('circumferentialStart').value;
-    const length = parseInt(document.getElementById('length').value);  // Number of columns
-    const numRows = Math.ceil(Math.PI * pipeDiameter);  // Calculated number of rows based on circumference
-
-    if (!componentName || isNaN(pipeDiameter) || isNaN(axialStart) || !circumferentialStart || isNaN(length)) {
-        alert('Please fill in all fields with valid values.');
-        return;
-    }
-
-    let table = '<table><tr><th class="position-column">Position</th>';  // Header for the position column
-    for (let i = 1; i <= length; i++) {
-        table += `<th style="position: sticky; top: 0;">${i}</th>`;  // Sticky header cells for each column
-    }
-    table += '</tr>';
-
-    // Generating rows with extended alphabet labels for positions
-    for (let i = 0; i < numRows; i++) {
-        let rowLabel = generateLabel(i);
-        table += `<tr><td class="position-column">${rowLabel}</td>`;  // Sticky column cells with extended labels
-        for (let j = 1; j <= length; j++) {
-            table += `<td><input type='number' step='1' min='0' required inputmode='numeric' placeholder='-' data-label='${rowLabel}' data-number='${j}' onchange='updateData("${rowLabel}", ${j}, this.value)'></td>`;
+            let label = '';
+            while (index >= 0) {
+                let remainder = index % 26;
+                label = String.fromCharCode(65 + remainder) + label;
+                index = Math.floor(index / 26) - 1;
+            }
+            return label;
         }
-        table += '</tr>';
-    }
-    table += '</table>';
 
-    document.getElementById('tableContainer').innerHTML = table;
-}
+        function generateTable() {
+            const componentName = document.getElementById('componentName').value;
+            const pipeDiameter = parseFloat(document.getElementById('pipeDiameter').value);
+            const axialStart = parseFloat(document.getElementById('axialStart').value);
+            const circumferentialStart = document.getElementById('circumferentialStart').value;
+            const length = parseInt(document.getElementById('length').value);
+            const numRows = Math.ceil(Math.PI * pipeDiameter);
 
+            if (!componentName || isNaN(pipeDiameter) || isNaN(axialStart) || !circumferentialStart || isNaN(length)) {
+                alert('Please fill in all fields with valid values.');
+                return;
+            }
 
+            let table = '<table><tr><th class="position-column">Position</th>';
+            for (let i = 1; i <= length; i++) {
+                table += `<th>${i}</th>`;
+            }
+            table += '</tr>';
 
+            for (let i = 0; i < numRows; i++) {
+                let rowLabel = generateLabel(i);
+                table += `<tr><td class="position-column">${rowLabel}</td>`;
+                for (let j = 1; j <= length; j++) {
+                    table += `<td><input type='number' step='1' min='0' required inputmode='numeric' placeholder='-' data-label='${rowLabel}' data-number='${j}' onchange='updateData("${rowLabel}", ${j}, this.value)'></td>`;
+                }
+                table += '</tr>';
+            }
+            table += '</table>';
+
+            document.getElementById('tableContainer').innerHTML = table;
+        }
 
         function updateData(label, number, value) {
-            const cellSelector = `input[data-label='${label}'][data-number='${number}']`;
-            const inputElement = document.querySelector(cellSelector);
-            if (!currentComponent.data[label]) {
-                currentComponent.data[label] = {};
-            }
-            if (value === "") {
-                delete currentComponent.data[label][number];
-                inputElement.classList.remove('filled');
-                if (Object.keys(currentComponent.data[label]).length === 0) {
-                    delete currentComponent.data[label];
-                }
-            } else {
-                currentComponent.data[label][number] = parseFloat(value); // Adjust as necessary
-                inputElement.classList.add('filled');
-            }
-            updateResults();
+    if (!currentComponent) {
+        currentComponent = { name: document.getElementById('componentName').value, data: {} };
+    }
+    if (!currentComponent.data[label]) {
+        currentComponent.data[label] = {};
+    }
+    const nominalThickness = parseFloat(document.getElementById('wallThickness').value);
+    const inputValue = parseFloat(value);
+
+    // Ensure both inputs are valid numbers before processing
+    if (isNaN(nominalThickness) || isNaN(inputValue)) {
+        alert("Please enter valid numbers for all inputs.");
+        return;  // Exit if there's invalid input
+    }
+
+    if (value === "") {
+        delete currentComponent.data[label][number];
+        document.querySelector(`input[data-label='${label}'][data-number='${number}']`).classList.remove('filled');
+        if (Object.keys(currentComponent.data[label]).length === 0) {
+            delete currentComponent.data[label];
         }
-        
+    } else {
+        currentComponent.data[label][number] = inputValue;
+        document.querySelector(`input[data-label='${label}'][data-number='${number}']`).classList.add('filled');
+
+        // Check if the input value is outside the nominal wall thickness by more than 20%
+        if (Math.abs(inputValue - nominalThickness*1000) > 0.2 * nominalThickness*1000) {
+            alert(`Warning: Measurement at ${label}${number} is outside the nominal wall thickness range by more than 20%. Nominal: ${nominalThickness}, Measured: ${inputValue/1000}`);
+        }
+    }
+    updateResults();
+}
+
+
         function updateResults() {
-            if (!currentComponent) return;
             let allValues = [];
             Object.values(currentComponent.data).forEach(row => {
                 Object.values(row).forEach(value => {
@@ -296,11 +289,11 @@ function generateTable() {
                 });
             });
             const minRead = allValues.length ? Math.min(...allValues) : 'N/A';
-            const avgRead = allValues.length ? (allValues.reduce((sum, val) => sum + val, 0) / allValues.length) : 'N/A';
-            document.getElementById('minRead').textContent = `Minimum Reading: ${minRead.toFixed(3)}`;
-            document.getElementById('avgRead').textContent = `Average Reading: ${avgRead.toFixed(3)}`;
+            const avgRead = allValues.length ? (allValues.reduce((sum, val) => sum + val, 0) / allValues.length).toFixed(3) : 'N/A';
+            document.getElementById('minRead').textContent = `Minimum Reading: ${minRead}`;
+            document.getElementById('avgRead').textContent = `Average Reading: ${avgRead}`;
         }
-        
+
         function saveData() {
             if (!currentComponent) {
                 alert('Please generate a table first.');
@@ -308,12 +301,7 @@ function generateTable() {
             }
             currentComponent.timestamp = new Date().toLocaleString();
             let savedComponents = JSON.parse(localStorage.getItem('components') || '[]');
-            const index = savedComponents.findIndex(comp => comp.name === currentComponent.name);
-            if (index !== -1) {
-                savedComponents[index] = currentComponent;
-            } else {
-                savedComponents.push(currentComponent);
-            }
+            savedComponents.push(currentComponent);
             localStorage.setItem('components', JSON.stringify(savedComponents));
             alert('Data saved successfully!');
             updateSavedList();
@@ -321,16 +309,14 @@ function generateTable() {
 
         function loadData(index) {
             const savedComponents = JSON.parse(localStorage.getItem('components') || '[]');
-            const component = savedComponents[index];
-            if (component) {
-                currentComponent = component;
-                document.getElementById('componentName').value = component.name;
-                document.getElementById('pipeDiameter').value = component.pipeDiameter;
-                document.getElementById('axialStart').value = component.axialStart;
-                document.getElementById('circumferentialStart').value = component.circumferentialStart;
-                document.getElementById('length').value = component.length;
-                generateTable(); // This should populate the inputs with saved data
-                alert('Data loaded successfully!');
+            currentComponent = savedComponents[index];
+            if (currentComponent) {
+                document.getElementById('componentName').value = currentComponent.name;
+                document.getElementById('pipeDiameter').value = currentComponent.pipeDiameter;
+                document.getElementById('axialStart').value = currentComponent.axialStart;
+                document.getElementById('circumferentialStart').value = currentComponent.circumferentialStart;
+                document.getElementById('length').value = currentComponent.length;
+                generateTable();
             } else {
                 alert('No saved data found for this component.');
             }
@@ -338,15 +324,13 @@ function generateTable() {
 
         function updateSavedList() {
             const savedComponents = JSON.parse(localStorage.getItem('components') || '[]');
-            const listContainer = document.getElementById('savedDataList');
-            listContainer.innerHTML = '';
+            const list = document.getElementById('savedDataList');
+            list.innerHTML = '';
             savedComponents.forEach((component, index) => {
-                const link = document.createElement('a');
-                link.textContent = `${component.name} - ${component.timestamp}`;
-                link.href = '#';
-                link.onclick = () => loadData(index);
-                listContainer.appendChild(link);
-                listContainer.appendChild(document.createElement('br'));
+                const entry = document.createElement('div');
+                entry.textContent = `${component.name} - ${component.timestamp}`;
+                entry.onclick = () => loadData(index);
+                list.appendChild(entry);
             });
         }
 
@@ -356,38 +340,37 @@ function generateTable() {
                 return;
             }
             const comments = document.getElementById('comments').value;
-            let csvContent = "data:text/csv;charset=utf-8,";
-            csvContent += `Component Name: ${currentComponent.name}\r\n`;
-            csvContent += `Pipe Diameter: ${currentComponent.pipeDiameter} inches\r\n`;
-            csvContent += `Axial Start: ${currentComponent.axialStart} inches\r\n`;
-            csvContent += `Circumferential Start: ${currentComponent.circumferentialStart}\r\n`;
-            csvContent += `Calculated Circumference: ${currentComponent.circumference.toFixed(2)} inches\r\n`;
-            csvContent += `Length: ${currentComponent.length} inches\r\n`;
-            csvContent += `Comments: ${comments}\r\n\r\n`;
+            let csvContent = [];
+            csvContent.push(`Component Name: ${currentComponent.name}`);
+            csvContent.push(`Pipe Diameter: ${currentComponent.pipeDiameter} inches`);
+            csvContent.push(`Axial Start: ${currentComponent.axialStart} inches`);
+            csvContent.push(`Circumferential Start: ${currentComponent.circumferentialStart}`);
+            csvContent.push(`Calculated Circumference: ${currentComponent.circumference.toFixed(2)} inches`);
+            csvContent.push(`Length: ${currentComponent.length} inches`);
+            csvContent.push(`Comments: ${comments}\n`);
 
-            csvContent += 'Position,';
+            let header = ['Position'];
             for (let i = 1; i <= currentComponent.length; i++) {
-                csvContent += `${i},`;
+                header.push(i);
             }
-            csvContent = csvContent.slice(0, -1) + '\r\n';
+            csvContent.push(header.join(','));
 
-            for (let i = 0; i < currentComponent.numCircumFields; i++) {
-                const label = generateLabel(i);
-                csvContent += `${label},`;
-                for (let j = 1; j <= currentComponent.length; j++) {
-                    csvContent += `${currentComponent.data[label] && currentComponent.data[label][j] ? currentComponent.data[label][j].toFixed(3) : ''},`;
+            Object.keys(currentComponent.data).forEach(label => {
+                let row = [label];
+                for (let i = 1; i <= currentComponent.length; i++) {
+                    row.push(currentComponent.data[label][i] ? currentComponent.data[label][i].toFixed(3) : '');
                 }
-                csvContent = csvContent.slice(0, -1) + '\r\n';
-            }
+                csvContent.push(row.join(','));
+            });
 
             const allValues = Object.values(currentComponent.data).flatMap(row => Object.values(row));
             const minRead = allValues.length ? Math.min(...allValues) : 'N/A';
             const avgRead = allValues.length ? (allValues.reduce((sum, val) => sum + val, 0) / allValues.length).toFixed(3) : 'N/A';
 
-            csvContent += `\nMinimum Reading: ${minRead}\n`;
-            csvContent += `Average Reading: ${avgRead}\n`;
+            csvContent.push(`\nMinimum Reading: ${minRead}`);
+            csvContent.push(`Average Reading: ${avgRead}`);
 
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const blob = new Blob([csvContent.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.setAttribute('href', url);
@@ -407,8 +390,8 @@ function generateTable() {
                 document.getElementById('circumferentialStart').value = '';
                 document.getElementById('length').value = '';
                 document.getElementById('comments').value = '';
-                document.getElementById('minRead').innerText = 'Minimum Reading: N/A';
-                document.getElementById('avgRead').innerText = 'Average Reading: N/A';
+                document.getElementById('minRead').textContent = 'Minimum Reading: N/A';
+                document.getElementById('avgRead').textContent = 'Average Reading: N/A';
             }
         }
     </script>
