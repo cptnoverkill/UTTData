@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultrasonic Thickness Data Entry</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+            color: #333;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            background-color: #fff;
+        }
+        th, td {
+            border: 1px solid #333;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+            font-weight: bold;
+        }
+        input[type="number"], input[type="text"], input[list] {
+            width: 60px;
+            color: #333;
+            background-color: #fff;
+            border: 1px solid #333;
+            padding: 5px;
+        }
+        input[type="number"]:focus, input[type="text"]:focus, input[list]:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 5px #4CAF50;
+        }
+        input[type="number"].filled {
+            background-color: #c8e6c9;
+        }
+        input[type="number"]::placeholder, input[list]::placeholder {
+            color: #999;
+        }
+        button {
+            margin: 10px 5px;
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button#clearTable {
+            background-color: #f44336;
+        }
+        button#clearTable:hover {
+            background-color: #d32f2f;
+        }
+        label {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        .button-group {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Ultrasonic Thickness Data Entry</h1>
+    
+    <div class="input-group">
+        <label for="componentName">Component Name:</label>
+        <input type="text" id="componentName" required>
+    </div>
+    
+    <div class="input-group">
+        <label for="pipeDiameter">Pipe Diameter (inches):</label>
+        <input list="pipe-diameters" id="pipeDiameter" required placeholder="Choose diameter...">
+        <datalist id="pipe-diameters">
+            <option value="1.000">
+            <option value="1.250">
+            <option value="1.500">
+            <option value="2.000">
+            <option value="2.500">
+            <option value="3.000">
+            <option value="3.500">
+            <option value="4.000">
+            <option value="4.500">
+            <option value="5.000">
+            <option value="6.000">
+            <option value="8.000">
+            <option value="10.000">
+            <option value="12.000">
+            <option value="14.000">
+            <option value="16.000">
+            <option value="18.000">
+            <option value="20.000">
+            <option value="22.000">
+            <option value="24.000">
+            <option value="26.000">
+            <option value="28.000">
+            <option value="30.000">
+            <option value="32.000">
+            <option value="34.000">
+            <option value="36.000">
+            <option value="38.000">
+            <option value="40.000">
+            <option value="42.000">
+            <option value="44.000">
+            <option value="46.000">
+            <option value="48.000">
+            <option value="52.000">
+            <option value="54.000">
+            <option value="56.000">
+            <option value="60.000">
+        </datalist>
+    </div>
+    
+    <div class="input-group">
+        <label for="length">Length (inches):</label>
+        <input type="number" id="length" min="1" required>
+    </div>
+    
+    <button onclick="generateTable()">Generate Table</button>
+    
+    <div id="tableContainer"></div>
+    
+    <div class="button-group">
+        <button onclick="saveData()">Save Data</button>
+        <button onclick="loadData()">Load Data</button>
+        <button onclick="exportCSV()">Export to CSV</button>
+        <button id="clearTable" onclick="clearTable()">Clear Table</button>
+    </div>
+    
+    <script>
+        let currentComponent = null;
+        
+        function generateLabel(index) {
+            const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            let label = '';
+            
+            if (index < 26) {
+                label = alphabet[index];
+            } else {
+                let prefix = Math.floor(index / 26) - 1;
+                let suffix = index % 26;
+                label = alphabet[prefix] + alphabet[suffix];
+            }
+            
+            return label;
+        }
+        
+        function generateTable() {
+            const componentName = document.getElementById('componentName').value;
+            const pipeDiameter = parseFloat(document.getElementById('pipeDiameter').value);
+            const length = parseInt(document.getElementById('length').value);
+            
+            if (!componentName || isNaN(pipeDiameter) || isNaN(length)) {
+                alert('Please fill in all fields with valid values.');
+                return;
+            }
+            
+            const circumference = Math.PI * pipeDiameter;
+            const numCircumFields = Math.ceil(circumference);
+            
+            currentComponent = {
+                name: componentName,
+                pipeDiameter: pipeDiameter,
+                circumference: circumference,
+                numCircumFields: numCircumFields,
+                length: length,
+                data: {}
+            };
+            
+            let table = '<table><tr><th>Position</th>';
+            for (let i = 1; i <= length; i++) {
+                table += `<th>${i}</th>`;
+            }
+            table += '</tr>';
+            
+            for (let i = 0; i < numCircumFields; i++) {
+                const label = generateLabel(i);
+                table += `<tr><td>${label}</td>`;
+                for (let j = 1; j <= length; j++) {
+                    table += `<td><input type="number" step="0.001" min="0" placeholder="-" onchange="updateData('${label}', ${j}, this.value)" oninput="this.classList.toggle('filled', this.value !== '')"></td>`;
+                }
+                table += '</tr>';
+            }
+            table += '</table>';
+            
+            document.getElementById('tableContainer').innerHTML = table;
+        }
+        
+        function updateData(label, number, value) {
+            if (!currentComponent.data[label]) {
+                currentComponent.data[label] = {};
+            }
+            if (value === "") {
+                delete currentComponent.data[label][number];
+                if (Object.keys(currentComponent.data[label]).length === 0) {
+                    delete currentComponent.data[label];
+                }
+            } else {
+                currentComponent.data[label][number] = parseFloat(value);
+            }
+        }
+        
+        function saveData() {
+            if (!currentComponent) {
+                alert('Please generate a table first.');
+                return;
+            }
+            
+            let savedComponents = JSON.parse(localStorage.getItem('components') || '[]');
+            const existingIndex = savedComponents.findIndex(c => c.name === currentComponent.name);
+            
+            if (existingIndex !== -1) {
+                savedComponents[existingIndex] = currentComponent;
+            } else {
+                savedComponents.push(currentComponent);
+            }
+            
+            localStorage.setItem('components', JSON.stringify(savedComponents));
+            alert('Data saved successfully!');
+        }
+        
+        function loadData() {
+            const savedComponents = JSON.parse(localStorage.getItem('components') || '[]');
+            const componentName = document.getElementById('componentName').value;
+            
+            const component = savedComponents.find(c => c.name === componentName);
+            
+            if (component) {
+                currentComponent = component;
+                document.getElementById('pipeDiameter').value = component.pipeDiameter;
+                document.getElementById('length').value = component.length;
+                generateTable();
+                
+                for (const label in component.data) {
+                    for (const number in component.data[label]) {
+                        const input = document.querySelector(`table input[onchange="updateData('${label}', ${number}, this.value)"]`);
+                        if (input) {
+                            input.value = component.data[label][number];
+                            input.classList.add('filled');
+                        }
+                    }
+                }
+                
+                alert('Data loaded successfully!');
+            } else {
+                alert('No saved data found for this component.');
+            }
+        }
+        
+        function exportCSV() {
+            if (!currentComponent) {
+                alert('Please generate a table first.');
+                return;
+            }
+            
+            let csvContent = `Component Name: ${currentComponent.name}\n`;
+            csvContent += `Pipe Diameter: ${currentComponent.pipeDiameter} inches\n`;
+            csvContent += `Calculated Circumference: ${currentComponent.circumference.toFixed(2)} inches\n`;
+            csvContent += `Length: ${currentComponent.length} inches\n\n`;
+            
+            csvContent += 'Position,' + Array.from({length: currentComponent.length}, (_, i) => i + 1).join(',') + '\n';
+            
+            for (let i = 0; i < currentComponent.numCircumFields; i++) {
+                const label = generateLabel(i);
+                csvContent += label + ',';
+                for (let j = 1; j <= currentComponent.length; j++) {
+                    csvContent += (currentComponent.data[label]?.[j] || '') + ',';
+                }
+                csvContent = csvContent.slice(0, -1) + '\n';
+            }
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            if (link.download !== undefined) {
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', `${currentComponent.name}_thickness_data.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+
+        function clearTable() {
+            if (confirm("Are you sure you want to clear the table? All unsaved data will be lost.")) {
+                currentComponent = null;
+                document.getElementById('tableContainer').innerHTML = '';
+                document.getElementById('componentName').value = '';
+                document.getElementById('pipeDiameter').value = '';
+                document.getElementById('length').value = '';
+            }
+        }
+    </script>
+</body>
+</html>
