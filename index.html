@@ -13,10 +13,14 @@
             background-color: #f0f0f0;
             color: #333;
         }
+        #tableContainer {
+            overflow-x: auto;  /* Allows horizontal scrolling */
+            background-color: #fff;
+        }
         table {
             border-collapse: collapse;
             width: 100%;
-            background-color: #fff;
+            min-width: 600px;  /* Ensures the table is wide enough for sticky positioning to be noticeable */
         }
         th, td {
             border: 1px solid #333;
@@ -27,13 +31,15 @@
         th.position-column, td.position-column {
             position: sticky;
             left: 0;
-            background-color: white;
+            background-color: white;  /* Ensures that the sticky column has a solid background */
             z-index: 1;
         }
         th {
             position: sticky;
             top: 0;
-            z-index: 2;
+            background-color: #4CAF50;
+            color: white;
+            z-index: 2;  /* Ensures that the sticky header is above other content */
         }
         input[type="number"], input[type="text"], input[list], input[type="time"] {
             width: 100%;
@@ -98,6 +104,8 @@
             margin-top: 20px;
         }
     </style>
+
+
 </head>
 <body>
     <h1>Ultrasonic Thickness Data Entry</h1>
