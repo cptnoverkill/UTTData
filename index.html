@@ -131,7 +131,7 @@
     
     <div class="input-group">
         <label for="length">Length (inches):</label>
-        <input type="number" id="length" min="1" required>
+        <input type="number" id="length" min="1" required inputmode="numeric">>
     </div>
     
     <button onclick="generateTable()">Generate Table</button>
@@ -195,7 +195,7 @@
                 const label = generateLabel(i);
                 table += `<tr><td>${label}</td>`;
                 for (let j = 1; j <= length; j++) {
-                    table += `<td><input type="number" step="0.001" min="0" placeholder="-" onchange="updateData('${label}', ${j}, this.value)" oninput="this.classList.toggle('filled', this.value !== '')"></td>`;
+                    table += `<td><input type="number" step="0.001" min="0" required inputmode="numeric" placeholder="-" onchange="updateData('${label}', ${j}, this.value)" oninput="this.classList.toggle('filled', this.value !== '')"></td>`;
                 }
                 table += '</tr>';
             }
