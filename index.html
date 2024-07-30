@@ -255,7 +255,7 @@ function updateData(label, number, value) {
         currentComponent.data.set(label, {});
     }
     let rowData = currentComponent.data.get(label);
-    const inputValue = parseFloat(value);
+    const inputValue = parseFloat(value) / 1000;  // Divide by 1000 to convert to decimal
     if (isNaN(inputValue) && value !== "") {
         alert("Please enter a valid number.");
         return;
@@ -264,9 +264,13 @@ function updateData(label, number, value) {
     if (value === "") {
         delete rowData[number];
     } else {
-        rowData[number] = inputValue;
+        rowData[number] = inputValue;  // Store data as decimal
+        // Check if the input value is outside the nominal wall thickness by more than 20%
+        const nominalThickness = parseFloat(document.getElementById('wallThickness').value) / 1000;
+        if (Math.abs(inputValue - nominalThickness) > 0.2 * nominalThickness) {
+            alert(`Warning: Measurement at ${label}${number} is outside the nominal wall thickness range by more than 20%. Nominal: ${nominalThickness}, Measured: ${inputValue}`);
+        }
     }
-
     currentComponent.data.set(label, rowData);
     updateResults();
 }
@@ -276,37 +280,38 @@ function exportCSV() {
         alert('Please generate and fill in the table before exporting.');
         return;
     }
-
     const comments = document.getElementById('comments').value;
-    let csvContent = `Component Name: ${currentComponent.name}\n`;
-    csvContent += `Pipe Diameter: ${currentComponent.pipeDiameter} inches\n`;
-    csvContent += `Axial Start: ${currentComponent.axialStart} inches\n`;
-    csvContent += `Circumferential Start: ${currentComponent.circumferentialStart}\n`;
-    csvContent += `Nominal Wall Thickness: ${parseFloat(document.getElementById('wallThickness').value)} inches\n`;
-    csvContent += `Comments: ${comments}\n\n`;
+    let csvContent = [];
+    csvContent.push(`Component Name: ${currentComponent.name}`);
+    csvContent.push(`Pipe Diameter: ${currentComponent.pipeDiameter} inches`);
+    csvContent.push(`Axial Start: ${currentComponent.axialStart} inches`);
+    csvContent.push(`Circumferential Start: ${currentComponent.circumferentialStart}`);
+    const nominalThickness = parseFloat(document.getElementById('wallThickness').value) / 1000;
+    csvContent.push(`Nominal Wall Thickness: ${nominalThickness.toFixed(3)} inches`);  // Converted to decimal
+    csvContent.push(`Comments: ${comments}\n`);
 
     let header = ['Position'];
     for (let i = 1; i <= currentComponent.length; i++) {
         header.push(i);
     }
-    csvContent += header.join(',') + '\n';
+    csvContent.push(header.join(','));
 
     for (let [label, rowData] of currentComponent.data.entries()) {
         let row = [label];
         for (let i = 1; i <= currentComponent.length; i++) {
             row.push(rowData[i] ? rowData[i].toFixed(3) : '');
         }
-        csvContent += row.join(',') + '\n';
+        csvContent.push(row.join(','));
     }
 
     const allValues = Array.from(currentComponent.data.values()).flatMap(row => Object.values(row));
-    const minRead = Math.min(...allValues).toFixed(3);
-    const avgRead = (allValues.reduce((sum, val) => sum + val, 0) / allValues.length).toFixed(3);
+    const minRead = allValues.length ? Math.min(...allValues) : 'N/A';
+    const avgRead = allValues.length ? (allValues.reduce((sum, val) => sum + val, 0) / allValues.length).toFixed(3) : 'N/A';
 
-    csvContent += `\nMinimum Reading: ${minRead}\n`;
-    csvContent += `Average Reading: ${avgRead}\n`;
+    csvContent.push(`\nMinimum Reading: ${minRead}`);
+    csvContent.push(`Average Reading: ${avgRead}`);
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob([csvContent.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
