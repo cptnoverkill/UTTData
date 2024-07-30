@@ -339,52 +339,55 @@
         }
         
         function exportCSV() {
-            if (!currentComponent) {
-                alert('Please generate a table first.');
-                return;
-            }
-            
-            const comments = document.getElementById('comments').value;
-            
-            let csvContent = `Component Name: ${currentComponent.name}\n`;
-            csvContent += `Pipe Diameter: ${currentComponent.pipeDiameter} inches\n`;
-            csvContent += `Axial Start: ${currentComponent.axialStart} inches\n`;
-            csvContent += `Circumferential Start: ${currentComponent.circumferentialStart}\n`;
-            csvContent += `Calculated Circumference: ${currentComponent.circumference.toFixed(2)} inches\n`;
-            csvContent += `Length: ${currentComponent.length} inches\n`;
-            csvContent += `Comments: ${comments}\n\n`;
-            
-            csvContent += 'Position,' + Array.from({length: currentComponent.length}, (_, i) => i + 1).join(',') + '\n';
-            
-            for (let i = 0; i < numCircumFields; i++) {
-                const label = generateLabel(i);
-                csvContent += label + ',';
-                for (let j = 1; j <= currentComponent.length; j++) {
-                    csvContent += (currentComponent.data[label]?.[j] || '') + ',';
-                }
-                csvContent = csvContent.slice(0, -1) + '\n';
-            }
-            
-            const allValues = Object.values(currentComponent.data).flatMap(Object.values).filter(v => v !== undefined);
-            const minRead = allValues.length > 0 ? Math.min(...allValues).toFixed(3) : 'N/A';
-            const avgRead = allValues.length > 0 ? (allValues.reduce((sum, val) => sum + val, 0) / allValues.length).toFixed(3) : 'N/A';
-            
-            csvContent += `\nMinimum Reading: ${minRead}\n`;
-            csvContent += `Average Reading: ${avgRead}\n`;
-            
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            if (link.download !== undefined) {
-                const url = URL.createObjectURL(blob);
-                link.setAttribute('href', url);
-                link.setAttribute('download', `${currentComponent.name}_thickness_data.csv`);
-                link.style.visibility = 'hidden';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            }
+    if (!currentComponent) {
+        alert('Please generate a table first.');
+        return;
+    }
+
+    // Preparing CSV content
+    const comments = document.getElementById('comments').value;
+    let csvContent = `Component Name: ${currentComponent.name}\r\n`;
+    csvContent += `Pipe Diameter: ${currentComponent.pipeDiameter} inches\r\n`;
+    csvContent += `Axial Start: ${currentComponent.axialStart} inches\r\n`;
+    csvContent += `Circumferential Start: ${currentComponent.circumferentialStart}\r\n`;
+    csvContent += `Calculated Circumference: ${currentComponent.circumference.toFixed(2)} inches\r\n`;
+    csvContent += `Length: ${currentComponent.length} inches\r\n`;
+    csvContent += `Comments: ${comments}\r\n\r\n`;
+
+    csvContent += 'Position,';
+    for (let i = 1; i <= currentComponent.length; i++) {
+        csvContent += `${i},`;
+    }
+    csvContent += '\r\n';
+
+    for (let i = 0; i < currentComponent.numCircumFields; i++) {
+        const label = generateLabel(i);
+        csvContent += `${label},`;
+        for (let j = 1; j <= currentComponent.length; j++) {
+            csvContent += `${currentComponent.data[label] && currentComponent.data[label][j] ? (currentComponent.data[label][j] * 1000).toFixed(3) : ''},`;
         }
-        
+        csvContent = csvContent.slice(0, -1) + '\r\n';  // Remove the last comma and add newline
+    }
+
+    // Calculating min and average values
+    const allValues = Object.values(currentComponent.data).flatMap(row => Object.values(row));
+    const minRead = allValues.length ? Math.min(...allValues) : 'N/A';
+    const avgRead = allValues.length ? (allValues.reduce((sum, val) => sum + val, 0) / allValues.length) : 'N/A';
+
+    csvContent += `\nMinimum Reading: ${minRead.toFixed(3)}\n`;
+    csvContent += `Average Reading: ${avgRead.toFixed(3)}\n`;
+
+    // Creating and triggering the download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${currentComponent.name}_thickness_data.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
         function clearTable() {
             if (confirm("Are you sure you want to clear the table? All unsaved data will be lost.")) {
                 currentComponent = null;
