@@ -8,7 +8,7 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 800px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
             background-color: #f0f0f0;
@@ -29,23 +29,21 @@
             color: white;
             font-weight: bold;
         }
-        input[type="number"], input[type="text"], input[list] {
-            width: 60px;
+        input[type="number"], input[type="text"], input[list], input[type="time"] {
+            width: 100%;
             color: #333;
             background-color: #fff;
             border: 1px solid #333;
             padding: 5px;
+            box-sizing: border-box;
         }
-        input[type="number"]:focus, input[type="text"]:focus, input[list]:focus {
+        input[type="number"]:focus, input[type="text"]:focus, input[list]:focus, input[type="time"]:focus {
             outline: none;
             border-color: #4CAF50;
             box-shadow: 0 0 5px #4CAF50;
         }
-        input[type="number"].filled {
-            background-color: #c8e6c9;
-        }
-        input[type="number"]::placeholder, input[list]::placeholder {
-            color: #999;
+        input.filled {
+            background-color: #c8e6c9; /* Light green background for filled inputs */
         }
         button {
             margin: 10px 5px;
@@ -66,14 +64,31 @@
         button#clearTable:hover {
             background-color: #d32f2f;
         }
-        label {
-            font-weight: bold;
-            margin-right: 10px;
-        }
         .input-group {
-            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: center;
+            margin-bottom: 20px;
         }
-        .button-group {
+        .input-group > div {
+            flex: 1 1 180px;
+            max-width: 220px;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            border: 1px solid #333;
+            resize: vertical;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 5px #4CAF50;
+        }
+        .results {
             margin-top: 20px;
         }
     </style>
@@ -82,72 +97,92 @@
     <h1>Ultrasonic Thickness Data Entry</h1>
     
     <div class="input-group">
-        <label for="componentName">Component Name:</label>
-        <input type="text" id="componentName" required>
+        <div>
+            <label for="componentName">Component Name:</label>
+            <input type="text" id="componentName" required>
+        </div>
+        <div>
+            <label for="pipeDiameter">Pipe Diameter (inches):</label>
+            <input list="pipe-diameters" id="pipeDiameter" required placeholder="Choose diameter...">
+            <datalist id="pipe-diameters">
+                <option value="1.050">
+                    <option value="1.315">
+                    <option value="1.660">
+                    <option value="1.900">
+                    <option value="1.500">
+                    <option value="2.375">
+                    <option value="2.875">
+                    <option value="3.500">
+                    <option value="4.000">
+                    <option value="4.500">
+                    <option value="5.563">
+                    <option value="6.625">
+                    <option value="8.625">
+                    <option value="10.750">
+                    <option value="12.750">
+                    <option value="14.000">
+                    <option value="16.000">
+                    <option value="18.000">
+                    <option value="20.000">
+                    <option value="22.000">
+                    <option value="24.000">
+                    <option value="26.000">
+                    <option value="28.000">
+                    <option value="30.000">
+                    <option value="32.000">
+                    <option value="34.000">
+                    <option value="36.000">
+                    <option value="38.000">
+                    <option value="40.000">
+                    <option value="42.000">
+                    <option value="44.000">
+                    <option value="46.000">
+                    <option value="48.000">
+                    <option value="52.000">
+                    <option value="54.000">
+                    <option value="56.000">
+                    <option value="60.000">
+                </datalist>
+            </datalist>
+        </div>
+        <div>
+            <label for="axialStart">Axial Start (inches):</label>
+            <input type="number" id="axialStart" min="0" step="0.1" inputmode="decimal" required>
+        </div>
+        <div>
+            <label for="circumferentialStart">Circumferential Start (hh:mm):</label>
+            <input type="time" id="circumferentialStart" required>
+        </div>
+        <div>
+            <label for="length">Length (inches):</label>
+            <input type="number" id="length" min="1" required inputmode="numeric">
+        </div>
     </div>
-    
-    <div class="input-group">
-        <label for="pipeDiameter">Pipe Diameter (inches):</label>
-        <input list="pipe-diameters" id="pipeDiameter" required placeholder="Choose diameter...">
-        <datalist id="pipe-diameters">
-            <option value="1.000">
-            <option value="1.250">
-            <option value="1.500">
-            <option value="2.000">
-            <option value="2.500">
-            <option value="3.000">
-            <option value="3.500">
-            <option value="4.000">
-            <option value="4.500">
-            <option value="5.000">
-            <option value="6.000">
-            <option value="8.000">
-            <option value="10.000">
-            <option value="12.000">
-            <option value="14.000">
-            <option value="16.000">
-            <option value="18.000">
-            <option value="20.000">
-            <option value="22.000">
-            <option value="24.000">
-            <option value="26.000">
-            <option value="28.000">
-            <option value="30.000">
-            <option value="32.000">
-            <option value="34.000">
-            <option value="36.000">
-            <option value="38.000">
-            <option value="40.000">
-            <option value="42.000">
-            <option value="44.000">
-            <option value="46.000">
-            <option value="48.000">
-            <option value="52.000">
-            <option value="54.000">
-            <option value="56.000">
-            <option value="60.000">
-        </datalist>
-    </div>
-    
-    <div class="input-group">
-        <label for="length">Length (inches):</label>
-        <input type="number" id="length" min="1" required inputmode="numeric">
-    </div>
-    
+
     <button onclick="generateTable()">Generate Table</button>
-    
+
     <div id="tableContainer"></div>
-    
+
+    <div class="results">
+        <p id="minRead">Minimum Reading: N/A</p>
+        <p id="avgRead">Average Reading: N/A</p>
+    </div>
+
+    <div class="input-group">
+        <label for="comments">Comments:</label>
+        <textarea id="comments" placeholder="Enter comments here..."></textarea>
+    </div>
+
     <div class="button-group">
         <button onclick="saveData()">Save Data</button>
         <button onclick="loadData()">Load Data</button>
         <button onclick="exportCSV()">Export to CSV</button>
         <button id="clearTable" onclick="clearTable()">Clear Table</button>
     </div>
-    
+
     <script>
         let currentComponent = null;
-        
+
         function generateLabel(index) {
             const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
             let label = '';
@@ -166,9 +201,11 @@
         function generateTable() {
             const componentName = document.getElementById('componentName').value;
             const pipeDiameter = parseFloat(document.getElementById('pipeDiameter').value);
+            const axialStart = parseFloat(document.getElementById('axialStart').value);
+            const circumferentialStart = document.getElementById('circumferentialStart').value;
             const length = parseInt(document.getElementById('length').value);
             
-            if (!componentName || isNaN(pipeDiameter) || isNaN(length)) {
+            if (!componentName || isNaN(pipeDiameter) || isNaN(axialStart) || !circumferentialStart || isNaN(length)) {
                 alert('Please fill in all fields with valid values.');
                 return;
             }
@@ -179,6 +216,8 @@
             currentComponent = {
                 name: componentName,
                 pipeDiameter: pipeDiameter,
+                axialStart: axialStart,
+                circumferentialStart: circumferentialStart,
                 circumference: circumference,
                 numCircumFields: numCircumFields,
                 length: length,
@@ -195,26 +234,58 @@
                 const label = generateLabel(i);
                 table += `<tr><td>${label}</td>`;
                 for (let j = 1; j <= length; j++) {
-                    table += `<td><input type="number" step="0.001" min="0" required inputmode="numeric" placeholder="-" onchange="updateData('${label}', ${j}, this.value)" oninput="this.classList.toggle('filled', this.value !== '')"></td>`;
+                    table += `<td><input type='number' step='1' min='0' required inputmode='numeric' placeholder='-' data-label='${label}' data-number='${j}' onchange='updateData("${label}", ${j}, this.value)'></td>`;
                 }
                 table += '</tr>';
             }
             table += '</table>';
             
             document.getElementById('tableContainer').innerHTML = table;
+            updateResults();
         }
         
         function updateData(label, number, value) {
+            const cellSelector = `input[data-label='${label}'][data-number='${number}']`;
+            const inputElement = document.querySelector(cellSelector);
+            
             if (!currentComponent.data[label]) {
                 currentComponent.data[label] = {};
             }
+
+            // Check if value is empty and update accordingly
             if (value === "") {
                 delete currentComponent.data[label][number];
+                inputElement.classList.remove('filled');
                 if (Object.keys(currentComponent.data[label]).length === 0) {
                     delete currentComponent.data[label];
                 }
             } else {
-                currentComponent.data[label][number] = parseFloat(value);
+                currentComponent.data[label][number] = parseFloat(value) / 1000; // Convert from integer input to decimal storage
+                inputElement.classList.add('filled');
+            }
+            updateResults();
+        }
+        
+        function updateResults() {
+            if (!currentComponent) return;
+            
+            let allValues = [];
+            for (const row of Object.values(currentComponent.data)) {
+                for (const value of Object.values(row)) {
+                    if (value !== null && value !== undefined) {
+                        allValues.push(value);
+                    }
+                }
+            }
+            
+            if (allValues.length > 0) {
+                const minRead = Math.min(...allValues);
+                const avgRead = allValues.reduce((sum, val) => sum + val, 0) / allValues.length;
+                document.getElementById('minRead').innerText = `Minimum Reading: ${minRead.toFixed(3)}`;
+                document.getElementById('avgRead').innerText = `Average Reading: ${avgRead.toFixed(3)}`;
+            } else {
+                document.getElementById('minRead').innerText = `Minimum Reading: N/A`;
+                document.getElementById('avgRead').innerText = `Average Reading: N/A`;
             }
         }
         
@@ -246,14 +317,16 @@
             if (component) {
                 currentComponent = component;
                 document.getElementById('pipeDiameter').value = component.pipeDiameter;
+                document.getElementById('axialStart').value = component.axialStart;
+                document.getElementById('circumferentialStart').value = component.circumferentialStart;
                 document.getElementById('length').value = component.length;
                 generateTable();
                 
                 for (const label in component.data) {
                     for (const number in component.data[label]) {
-                        const input = document.querySelector(`table input[onchange="updateData('${label}', ${number}, this.value)"]`);
+                        const input = document.querySelector(`input[data-label='${label}'][data-number='${number}']`);
                         if (input) {
-                            input.value = component.data[label][number];
+                            input.value = component.data[label][number] * 1000; // Convert back to integer for display
                             input.classList.add('filled');
                         }
                     }
@@ -271,14 +344,19 @@
                 return;
             }
             
+            const comments = document.getElementById('comments').value;
+            
             let csvContent = `Component Name: ${currentComponent.name}\n`;
             csvContent += `Pipe Diameter: ${currentComponent.pipeDiameter} inches\n`;
+            csvContent += `Axial Start: ${currentComponent.axialStart} inches\n`;
+            csvContent += `Circumferential Start: ${currentComponent.circumferentialStart}\n`;
             csvContent += `Calculated Circumference: ${currentComponent.circumference.toFixed(2)} inches\n`;
-            csvContent += `Length: ${currentComponent.length} inches\n\n`;
+            csvContent += `Length: ${currentComponent.length} inches\n`;
+            csvContent += `Comments: ${comments}\n\n`;
             
             csvContent += 'Position,' + Array.from({length: currentComponent.length}, (_, i) => i + 1).join(',') + '\n';
             
-            for (let i = 0; i < currentComponent.numCircumFields; i++) {
+            for (let i = 0; i < numCircumFields; i++) {
                 const label = generateLabel(i);
                 csvContent += label + ',';
                 for (let j = 1; j <= currentComponent.length; j++) {
@@ -286,6 +364,13 @@
                 }
                 csvContent = csvContent.slice(0, -1) + '\n';
             }
+            
+            const allValues = Object.values(currentComponent.data).flatMap(Object.values).filter(v => v !== undefined);
+            const minRead = allValues.length > 0 ? Math.min(...allValues).toFixed(3) : 'N/A';
+            const avgRead = allValues.length > 0 ? (allValues.reduce((sum, val) => sum + val, 0) / allValues.length).toFixed(3) : 'N/A';
+            
+            csvContent += `\nMinimum Reading: ${minRead}\n`;
+            csvContent += `Average Reading: ${avgRead}\n`;
             
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
@@ -299,14 +384,19 @@
                 document.body.removeChild(link);
             }
         }
-
+        
         function clearTable() {
             if (confirm("Are you sure you want to clear the table? All unsaved data will be lost.")) {
                 currentComponent = null;
                 document.getElementById('tableContainer').innerHTML = '';
                 document.getElementById('componentName').value = '';
                 document.getElementById('pipeDiameter').value = '';
+                document.getElementById('axialStart').value = '';
+                document.getElementById('circumferentialStart').value = '';
                 document.getElementById('length').value = '';
+                document.getElementById('comments').value = '';
+                document.getElementById('minRead').innerText = 'Minimum Reading: N/A';
+                document.getElementById('avgRead').innerText = 'Average Reading: N/A';
             }
         }
     </script>
