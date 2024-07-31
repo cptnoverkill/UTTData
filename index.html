@@ -76,6 +76,12 @@
         button#clearTable:hover {
             background-color: #d32f2f;
         }
+        button#clearAllButton {
+            background-color: #f44336;
+        }
+        button#clearAllButton:hover {
+            background-color: #d32f2f;
+        }
         .input-group {
             display: flex;
             justify-content: space-between;
@@ -196,13 +202,17 @@
         <button onclick="loadData()">Load Data</button>
         <button onclick="exportCSV()">Export to CSV</button>
         <button id="clearTable" onclick="clearTable()">Clear Table</button>
+        <button onclick="clearLocalStorage()" id="clearAllButton">Clear All Saved Data</button>
     </div>
+
+    
 
     <div class="saved-data-list" id="savedDataList">
         <!-- List of saved entries will appear here -->
     </div>
+<script>
 
-    <script>
+
 let currentComponent = null;
 
 function generateLabel(index) {
@@ -228,16 +238,15 @@ function generateTable() {
         return;
     }
 
-    if (!currentComponent) {
-        currentComponent = {
-            name: componentName,
-            pipeDiameter: pipeDiameter,
-            axialStart: axialStart,
-            circumferentialStart: circumferentialStart,
-            length: length,
-            data: new Map()
-        };
-    }
+    currentComponent = {
+        name: componentName,
+        pipeDiameter: pipeDiameter,
+        axialStart: axialStart,
+        circumferentialStart: circumferentialStart,
+        length: length,
+        wallThickness: parseFloat(document.getElementById('wallThickness').value) / 1000,  // Store in decimal
+        data: {}
+    };
 
     let table = '<table><tr><th class="position-column">Position</th>';
     for (let i = 1; i <= length; i++) {
@@ -259,65 +268,144 @@ function generateTable() {
 }
 
 function updateData(label, number, value) {
-    if (!currentComponent.data.has(label)) {
-        currentComponent.data.set(label, {});
-    }
-    let rowData = currentComponent.data.get(label);
-    const inputValue = parseFloat(value) / 1000;  // Divide by 1000 to convert to decimal
-    if (isNaN(inputValue) && value !== "") {
-        alert("Please enter a valid number.");
-        return;
-    }
+    const rowData = currentComponent.data[label] || {};
+    const inputValue = parseFloat(value) / 1000;  // Convert to decimal
 
     if (value === "") {
         delete rowData[number];
     } else {
-        rowData[number] = inputValue;  // Store data as decimal
-        // Check if the input value is outside the nominal wall thickness by more than 20%
-        const nominalThickness = parseFloat(document.getElementById('wallThickness').value) / 1000;
+        rowData[number] = inputValue;
+        const nominalThickness = currentComponent.wallThickness;
         if (Math.abs(inputValue - nominalThickness) > 0.2 * nominalThickness) {
             alert(`Warning: Measurement at ${label}${number} is outside the nominal wall thickness range by more than 20%. Nominal: ${nominalThickness}, Measured: ${inputValue}`);
         }
     }
-    currentComponent.data.set(label, rowData);
+
+    currentComponent.data[label] = rowData;  // Update the data store
     updateResults();
 }
 
+function updateResults() {
+    let allValues = [];
+    Object.keys(currentComponent.data).forEach(label => {
+        Object.values(currentComponent.data[label]).forEach(value => {
+            if (value !== undefined) {
+                allValues.push(value);
+            }
+        });
+    });
+    const minRead = allValues.length ? Math.min(...allValues) : 'N/A';
+    const avgRead = allValues.length ? (allValues.reduce((sum, val) => sum + val, 0) / allValues.length).toFixed(3) : 'N/A';
+    document.getElementById('minRead').textContent = `Minimum Reading: ${minRead}`;
+    document.getElementById('avgRead').textContent = `Average Reading: ${avgRead}`;
+}
+
+function saveData() {
+    if (!currentComponent || Object.keys(currentComponent.data).length === 0) {
+        alert('Please generate and fill in the table first.');
+        return;
+    }
+    currentComponent.timestamp = new Date().toLocaleString();
+    let savedComponents = JSON.parse(localStorage.getItem('components') || '[]');
+    savedComponents.push(currentComponent);
+    localStorage.setItem('components', JSON.stringify(savedComponents));
+    alert('Data saved successfully!');
+    updateSavedList();
+}
+
+function loadData(index) {
+    const savedComponents = JSON.parse(localStorage.getItem('components') || '[]');
+    currentComponent = savedComponents[index];
+    if (currentComponent) {
+        document.getElementById('componentName').value = currentComponent.name;
+        document.getElementById('pipeDiameter').value = currentComponent.pipeDiameter;
+        document.getElementById('wallThickness').value = currentComponent.wallThickness * 1000;  // Convert back to mils for display
+        document.getElementById('axialStart').value = currentComponent.axialStart;
+        document.getElementById('circumferentialStart').value = currentComponent.circumferentialStart;
+        document.getElementById('length').value = currentComponent.length;
+        generateTable();  // This will recreate the input fields
+        // Populate the table with data
+        for (const label in currentComponent.data) {
+            for (const number in currentComponent.data[label]) {
+                const input = document.querySelector(`input[data-label='${label}'][data-number='${number}']`);
+                if (input) {
+                    input.value = currentComponent.data[label][number] * 1000;  // Convert back to integer for display
+                }
+            }
+        }
+        alert('Data loaded successfully!');
+    } else {
+        alert('No saved data found for this component.');
+    }
+}
+
+function updateSavedList() {
+    const savedComponents = JSON.parse(localStorage.getItem('components') || '[]');
+    const list = document.getElementById('savedDataList');
+    list.innerHTML = '';
+    savedComponents.forEach((component, index) => {
+        const entryButton = document.createElement('button');
+        entryButton.textContent = `${component.name} - ${component.timestamp}`;
+        entryButton.onclick = () => loadData(index);
+        list.appendChild(entryButton);
+    });
+}
+
+function clearTable() {
+    if (confirm("Are you sure you want to clear the table? All unsaved data will be lost.")) {
+        currentComponent = null;
+        document.getElementById('tableContainer').innerHTML = '';
+        document.getElementById('componentName').value = '';
+        document.getElementById('pipeDiameter').value = '';
+        document.getElementById('wallThickness').value = '';
+        document.getElementById('axialStart').value = '';
+        document.getElementById('circumferentialStart').value = '';
+        document.getElementById('length').value = '';
+        document.getElementById('comments').value = '';
+        document.getElementById('minRead').textContent = 'Minimum Reading: N/A';
+        document.getElementById('avgRead').textContent = 'Average Reading: N/A';
+    }
+}
+
 function exportCSV() {
-    if (!currentComponent || currentComponent.data.size === 0) {
+    if (!currentComponent || Object.keys(currentComponent.data).length === 0) {
         alert('Please generate and fill in the table before exporting.');
         return;
     }
     const comments = document.getElementById('comments').value;
-    let csvContent = [];
-    csvContent.push(`Component Name: ${currentComponent.name}`);
-    csvContent.push(`Pipe Diameter: ${currentComponent.pipeDiameter} inches`);
-    csvContent.push(`Axial Start: ${currentComponent.axialStart} inches`);
-    csvContent.push(`Circumferential Start: ${currentComponent.circumferentialStart}`);
-    const nominalThickness = parseFloat(document.getElementById('wallThickness').value) / 1000;
-    csvContent.push(`Nominal Wall Thickness: ${nominalThickness.toFixed(3)} inches`);  // Converted to decimal
-    csvContent.push(`Comments: ${comments}\n`);
+    let csvContent = [
+        `Component Name: ${currentComponent.name}`,
+        `Pipe Diameter: ${currentComponent.pipeDiameter} inches`,
+        `Axial Start: ${currentComponent.axialStart} inches`,
+        `Circumferential Start: ${currentComponent.circumferentialStart}`,
+        `Nominal Wall Thickness: ${(currentComponent.wallThickness * 1000).toFixed(0)} mils`, // Ensure thickness is in mils for consistency
+        `Comments: ${comments}`,
+        ''
+    ];
 
+    // Prepare header with position numbers
     let header = ['Position'];
     for (let i = 1; i <= currentComponent.length; i++) {
         header.push(i);
     }
     csvContent.push(header.join(','));
 
-    for (let [label, rowData] of currentComponent.data.entries()) {
-        let row = [label];
-        for (let i = 1; i <= currentComponent.length; i++) {
-            row.push(rowData[i] ? rowData[i].toFixed(3) : '');
+    // Iterate over each row label and populate its respective data
+    for (let i = 0; i < Math.ceil(Math.PI * currentComponent.pipeDiameter); i++) {
+        let rowLabel = generateLabel(i);
+        let rowData = [rowLabel];
+        for (let j = 1; j <= currentComponent.length; j++) {
+            // This ensures empty strings are placed where no data exists
+            rowData.push(currentComponent.data[rowLabel] && currentComponent.data[rowLabel][j] ? (currentComponent.data[rowLabel][j] * 1000).toFixed(3) : '');
         }
-        csvContent.push(row.join(','));
+        csvContent.push(rowData.join(','));
     }
 
-    const allValues = Array.from(currentComponent.data.values()).flatMap(row => Object.values(row));
+    // Calculate minimum and average readings
+    const allValues = [].concat(...Object.values(currentComponent.data).map(row => Object.values(row)));
     const minRead = allValues.length ? Math.min(...allValues) : 'N/A';
     const avgRead = allValues.length ? (allValues.reduce((sum, val) => sum + val, 0) / allValues.length).toFixed(3) : 'N/A';
-
-    csvContent.push(`\nMinimum Reading: ${minRead}`);
-    csvContent.push(`Average Reading: ${avgRead}`);
+    csvContent.push('', `Minimum Reading: ${minRead}`, `Average Reading: ${avgRead}`);
 
     const blob = new Blob([csvContent.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -329,7 +417,16 @@ function exportCSV() {
     document.body.removeChild(link);
 }
 
+    function clearLocalStorage() {
+        if (confirm("Are you sure you want to clear all saved data? This action cannot be undone.")) {
+            localStorage.removeItem('components');  // Assuming 'components' is the key where data is stored
+            updateSavedList();  // Update the list display if it's being used
+            alert('All saved data has been cleared.');
+        }
+    }
 
-    </script>
+
+</script>
+
 </body>
 </html>
