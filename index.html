@@ -163,7 +163,7 @@
             
      
             <label for="wallThickness">Nominal Wall Thickness (mils):</label>
-            <input type="number" id="wallThickness" min="100" required oninput="delayedValidation()">
+            <input type="number" id="wallThickness" min="100" required>
         </div>
         <div>
             <label for="axialStart">Axial Start (inches):</label>
@@ -204,239 +204,228 @@
     </div>
 
 <script>
-    let validationTimeout;
 
-    function delayedValidation() {
-        clearTimeout(validationTimeout);
-        validationTimeout = setTimeout(validateWallThickness, 500); // 500ms delay
+let currentComponent = null;
+
+function generateLabel(index) {
+    let label = '';
+    while (index >= 0) {
+        let remainder = index % 26;
+        label = String.fromCharCode(65 + remainder) + label;
+        index = Math.floor(index / 26) - 1;
+    }
+    return label;
+}
+
+function generateTable() {
+    const componentName = document.getElementById('componentName').value;
+    const pipeDiameter = parseFloat(document.getElementById('pipeDiameter').value);
+    const axialStart = parseFloat(document.getElementById('axialStart').value);
+    const circumferentialStart = document.getElementById('circumferentialStart').value;
+    const length = parseInt(document.getElementById('length').value);
+    const wallThickness = parseFloat(document.getElementById('wallThickness').value);
+    const numRows = Math.ceil(Math.PI * pipeDiameter);
+
+    if (!componentName || isNaN(pipeDiameter) || isNaN(axialStart) || !circumferentialStart || isNaN(length) || isNaN(wallThickness)) {
+        alert('Please fill in all fields with valid values.');
+        return;
     }
 
-    function validateWallThickness() {
-        var wallThicknessInput = document.getElementById('wallThickness');
-        var value = wallThicknessInput.value;
-        
-        if (value && parseInt(value) < 100) {
-            alert("Error: Wall thickness must be entered in mils (0.250\" would be entered as 250).");
-            wallThicknessInput.value = ""; // Optionally reset the input
-            wallThicknessInput.focus(); // Set focus back to the input for correction
-        }
+    if (wallThickness < 100) {
+        alert("Error: Wall thickness must be entered in mils (0.250\" would be entered as 250).");
+        return;
     }
 
-    let currentComponent = null;
+    currentComponent = {
+        name: componentName,
+        pipeDiameter: pipeDiameter,
+        axialStart: axialStart,
+        circumferentialStart: circumferentialStart,
+        length: length,
+        wallThickness: wallThickness / 1000,  // Store in decimal
+        data: {}
+    };
 
-    function generateLabel(index) {
-        let label = '';
-        while (index >= 0) {
-            let remainder = index % 26;
-            label = String.fromCharCode(65 + remainder) + label;
-            index = Math.floor(index / 26) - 1;
-        }
-        return label;
+    let table = '<table><tr><th class="position-column">Position</th>';
+    for (let i = 1; i <= length; i++) {
+        table += `<th>${i}</th>`;
     }
+    table += '</tr>';
 
-    function generateTable() {
-        const componentName = document.getElementById('componentName').value;
-        const pipeDiameter = parseFloat(document.getElementById('pipeDiameter').value);
-        const axialStart = parseFloat(document.getElementById('axialStart').value);
-        const circumferentialStart = document.getElementById('circumferentialStart').value;
-        const length = parseInt(document.getElementById('length').value);
-        const numRows = Math.ceil(Math.PI * pipeDiameter);
-
-        if (!componentName || isNaN(pipeDiameter) || isNaN(axialStart) || !circumferentialStart || isNaN(length)) {
-            alert('Please fill in all fields with valid values.');
-            return;
-        }
-
-        currentComponent = {
-            name: componentName,
-            pipeDiameter: pipeDiameter,
-            axialStart: axialStart,
-            circumferentialStart: circumferentialStart,
-            length: length,
-            wallThickness: parseFloat(document.getElementById('wallThickness').value) / 1000,  // Store in decimal
-            data: {}
-        };
-
-        let table = '<table><tr><th class="position-column">Position</th>';
-        for (let i = 1; i <= length; i++) {
-            table += `<th>${i}</th>`;
+    for (let i = 0; i < numRows; i++) {
+        let rowLabel = generateLabel(i);
+        table += `<tr><td class="position-column">${rowLabel}</td>`;
+        for (let j = 1; j <= length; j++) {
+            table += `<td><input type='number' step='1' min='0' required inputmode='numeric' placeholder='-' data-label='${rowLabel}' data-number='${j}' onchange='updateData("${rowLabel}", ${j}, this.value)'></td>`;
         }
         table += '</tr>';
+    }
+    table += '</table>';
 
-        for (let i = 0; i < numRows; i++) {
-            let rowLabel = generateLabel(i);
-            table += `<tr><td class="position-column">${rowLabel}</td>`;
-            for (let j = 1; j <= length; j++) {
-                table += `<td><input type='number' step='1' min='0' required inputmode='numeric' placeholder='-' data-label='${rowLabel}' data-number='${j}' onchange='updateData("${rowLabel}", ${j}, this.value)'></td>`;
-            }
-            table += '</tr>';
+    document.getElementById('tableContainer').innerHTML = table;
+}
+
+function updateData(label, number, value) {
+    const rowData = currentComponent.data[label] || {};
+    const inputValue = parseFloat(value) / 1000;  // Convert to decimal
+
+    if (value === "") {
+        delete rowData[number];
+    } else {
+        rowData[number] = inputValue;
+        const nominalThickness = currentComponent.wallThickness;
+        if (Math.abs(inputValue - nominalThickness) > 0.2 * nominalThickness) {
+            alert(`Warning: Measurement at ${label}${number} is outside the nominal wall thickness range by more than 20%. Nominal: ${nominalThickness}, Measured: ${inputValue}`);
         }
-        table += '</table>';
-
-        document.getElementById('tableContainer').innerHTML = table;
     }
 
-    function updateData(label, number, value) {
-        const rowData = currentComponent.data[label] || {};
-        const inputValue = parseFloat(value) / 1000;  // Convert to decimal
+    currentComponent.data[label] = rowData;  // Update the data store
+    updateResults();
+}
 
-        if (value === "") {
-            delete rowData[number];
-        } else {
-            rowData[number] = inputValue;
-            const nominalThickness = currentComponent.wallThickness;
-            if (Math.abs(inputValue - nominalThickness) > 0.2 * nominalThickness) {
-                alert(`Warning: Measurement at ${label}${number} is outside the nominal wall thickness range by more than 20%. Nominal: ${nominalThickness}, Measured: ${inputValue}`);
+function updateResults() {
+    let allValues = [];
+    Object.keys(currentComponent.data).forEach(label => {
+        Object.values(currentComponent.data[label]).forEach(value => {
+            if (value !== undefined) {
+                allValues.push(value);
             }
-        }
-
-        currentComponent.data[label] = rowData;  // Update the data store
-        updateResults();
-    }
-
-    function updateResults() {
-        let allValues = [];
-        Object.keys(currentComponent.data).forEach(label => {
-            Object.values(currentComponent.data[label]).forEach(value => {
-                if (value !== undefined) {
-                    allValues.push(value);
-                }
-            });
         });
-        const minRead = allValues.length ? Math.min(...allValues) : 'N/A';
-        const avgRead = allValues.length ? (allValues.reduce((sum, val) => sum + val, 0) / allValues.length).toFixed(3) : 'N/A';
-        document.getElementById('minRead').textContent = `Minimum Reading: ${minRead}`;
-        document.getElementById('avgRead').textContent = `Average Reading: ${avgRead}`;
-    }
-
-    function saveData() {
-        if (!currentComponent || Object.keys(currentComponent.data).length === 0) {
-            alert('Please generate and fill in the table first.');
-            return;
-        }
-        currentComponent.timestamp = new Date().toLocaleString();
-        let savedComponents = JSON.parse(localStorage.getItem('components') || '[]');
-        savedComponents.push(currentComponent);
-        localStorage.setItem('components', JSON.stringify(savedComponents));
-        alert('Data saved successfully!');
-        updateSavedList();
-    }
-
-    function loadData(index) {
-        const savedComponents = JSON.parse(localStorage.getItem('components') || '[]');
-        currentComponent = savedComponents[index];
-        if (currentComponent) {
-            document.getElementById('componentName').value = currentComponent.name;
-            document.getElementById('pipeDiameter').value = currentComponent.pipeDiameter;
-            document.getElementById('wallThickness').value = currentComponent.wallThickness * 1000;  // Convert back to mils for display
-            document.getElementById('axialStart').value = currentComponent.axialStart;
-            document.getElementById('circumferentialStart').value = currentComponent.circumferentialStart;
-            document.getElementById('length').value = currentComponent.length;
-            generateTable();  // This will recreate the input fields
-            // Populate the table with data
-            for (const label in currentComponent.data) {
-                for (const number in currentComponent.data[label]) {
-                    const input = document.querySelector(`input[data-label='${label}'][data-number='${number}']`);
-                    if (input) {
-                        input.value = currentComponent.data[label][number] * 1000;  // Convert back to integer for display
-                    }
-                }
-            }
-            alert('Data loaded successfully!');
-        } else {
-            alert('No saved data found for this component.');
-        }
-    }
-
-    function updateSavedList() {
-        const savedComponents = JSON.parse(localStorage.getItem('components') || '[]');
-        const list = document.getElementById('savedDataList');
-        list.innerHTML = '';
-        savedComponents.forEach((component, index) => {
-            const entryButton = document.createElement('button');
-            entryButton.textContent = `${component.name} - ${component.timestamp}`;
-            entryButton.onclick = () => loadData(index);
-            list.appendChild(entryButton);
-        });
-    }
-
-    function clearTable() {
-        if (confirm("Are you sure you want to clear the table? All unsaved data will be lost.")) {
-            currentComponent = null;
-            document.getElementById('tableContainer').innerHTML = '';
-            document.getElementById('componentName').value = '';
-            document.getElementById('pipeDiameter').value = '';
-            document.getElementById('wallThickness').value = '';
-            document.getElementById('axialStart').value = '';
-            document.getElementById('circumferentialStart').value = '';
-            document.getElementById('length').value = '';
-            document.getElementById('comments').value = '';
-            document.getElementById('minRead').textContent = 'Minimum Reading: N/A';
-            document.getElementById('avgRead').textContent = 'Average Reading: N/A';
-        }
-    }
-
-    function exportCSV() {
-        if (!currentComponent || Object.keys(currentComponent.data).length === 0) {
-            alert('Please generate and fill in the table before exporting.');
-            return;
-        }
-        const comments = document.getElementById('comments').value;
-        let csvContent = [
-            `Component Name: ${currentComponent.name}`,
-            `Pipe Diameter: ${currentComponent.pipeDiameter} inches`,
-            `Axial Start: ${currentComponent.axialStart} inches`,
-            `Circumferential Start: ${currentComponent.circumferentialStart}`,
-            `Nominal Wall Thickness: ${(currentComponent.wallThickness * 1000).toFixed(0)} mils`, // Ensure thickness is in mils for consistency
-            `Comments: ${comments}`,
-            ''
-        ];
-
-        // Prepare header with position numbers
-        let header = ['Position'];
-        for (let i = 1; i <= currentComponent.length; i++) {
-            header.push(i);
-        }
-        csvContent.push(header.join(','));
-
-        // Iterate over each row label and populate its respective data
-        for (let i = 0; i < Math.ceil(Math.PI * currentComponent.pipeDiameter); i++) {
-            let rowLabel = generateLabel(i);
-            let rowData = [rowLabel];
-            for (let j = 1; j <= currentComponent.length; j++) {
-                // This ensures empty strings are placed where no data exists
-                rowData.push(currentComponent.data[rowLabel] && currentComponent.data[rowLabel][j] ? (currentComponent.data[rowLabel][j] * 1000).toFixed(3) : '');
-            }
-            csvContent.push(rowData.join(','));
-        }
-
-        // Calculate minimum and average readings
-        const allValues = [].concat(...Object.values(currentComponent.data).map(row => Object.values(row)));
-        const minRead = allValues.length ? Math.min(...allValues) : 'N/A';
-        const avgRead = allValues.length ? (allValues.reduce((sum, val) => sum + val, 0) / allValues.length).toFixed(3) : 'N/A';
-        csvContent.push('', `Minimum Reading: ${minRead}`, `Average Reading: ${avgRead}`);
-
-        const blob = new Blob([csvContent.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.setAttribute('href', url);
-        link.setAttribute('download', `${currentComponent.name}_thickness_data.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
-
-    function clearLocalStorage() {
-        if (confirm("Are you sure you want to clear all saved data? This action cannot be undone.")) {
-            localStorage.removeItem('components');  // Assuming 'components' is the key where data is stored
-            updateSavedList();  // Update the list display if it's being used
-            alert('All saved data has been cleared.');
-        }
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        updateSavedList();
     });
+    const minRead = allValues.length ? Math.min(...allValues) : 'N/A';
+    const avgRead = allValues.length ? (allValues.reduce((sum, val) => sum + val, 0) / allValues.length).toFixed(3) : 'N/A';
+    document.getElementById('minRead').textContent = `Minimum Reading: ${minRead}`;
+    document.getElementById('avgRead').textContent = `Average Reading: ${avgRead}`;
+}
+
+function saveData() {
+    if (!currentComponent || Object.keys(currentComponent.data).length === 0) {
+        alert('Please generate and fill in the table first.');
+        return;
+    }
+    currentComponent.timestamp = new Date().toLocaleString();
+    let savedComponents = JSON.parse(localStorage.getItem('components') || '[]');
+    savedComponents.push(currentComponent);
+    localStorage.setItem('components', JSON.stringify(savedComponents));
+    alert('Data saved successfully!');
+    updateSavedList();
+}
+
+function loadData(index) {
+    const savedComponents = JSON.parse(localStorage.getItem('components') || '[]');
+    currentComponent = savedComponents[index];
+    if (currentComponent) {
+        document.getElementById('componentName').value = currentComponent.name;
+        document.getElementById('pipeDiameter').value = currentComponent.pipeDiameter;
+        document.getElementById('wallThickness').value = currentComponent.wallThickness * 1000;  // Convert back to mils for display
+        document.getElementById('axialStart').value = currentComponent.axialStart;
+        document.getElementById('circumferentialStart').value = currentComponent.circumferentialStart;
+        document.getElementById('length').value = currentComponent.length;
+        generateTable();  // This will recreate the input fields
+        // Populate the table with data
+        for (const label in currentComponent.data) {
+            for (const number in currentComponent.data[label]) {
+                const input = document.querySelector(`input[data-label='${label}'][data-number='${number}']`);
+                if (input) {
+                    input.value = currentComponent.data[label][number] * 1000;  // Convert back to integer for display
+                }
+            }
+        }
+        alert('Data loaded successfully!');
+    } else {
+        alert('No saved data found for this component.');
+    }
+}
+
+function updateSavedList() {
+    const savedComponents = JSON.parse(localStorage.getItem('components') || '[]');
+    const list = document.getElementById('savedDataList');
+    list.innerHTML = '';
+    savedComponents.forEach((component, index) => {
+        const entryButton = document.createElement('button');
+        entryButton.textContent = `${component.name} - ${component.timestamp}`;
+        entryButton.onclick = () => loadData(index);
+        list.appendChild(entryButton);
+    });
+}
+
+function clearTable() {
+    if (confirm("Are you sure you want to clear the table? All unsaved data will be lost.")) {
+        currentComponent = null;
+        document.getElementById('tableContainer').innerHTML = '';
+        document.getElementById('componentName').value = '';
+        document.getElementById('pipeDiameter').value = '';
+        document.getElementById('wallThickness').value = '';
+        document.getElementById('axialStart').value = '';
+        document.getElementById('circumferentialStart').value = '';
+        document.getElementById('length').value = '';
+        document.getElementById('comments').value = '';
+        document.getElementById('minRead').textContent = 'Minimum Reading: N/A';
+        document.getElementById('avgRead').textContent = 'Average Reading: N/A';
+    }
+}
+
+function exportCSV() {
+    if (!currentComponent || Object.keys(currentComponent.data).length === 0) {
+        alert('Please generate and fill in the table before exporting.');
+        return;
+    }
+    const comments = document.getElementById('comments').value;
+    let csvContent = [
+        `Component Name: ${currentComponent.name}`,
+        `Pipe Diameter: ${currentComponent.pipeDiameter} inches`,
+        `Axial Start: ${currentComponent.axialStart} inches`,
+        `Circumferential Start: ${currentComponent.circumferentialStart}`,
+        `Nominal Wall Thickness: ${(currentComponent.wallThickness * 1000).toFixed(0)} mils`, // Ensure thickness is in mils for consistency
+        `Comments: ${comments}`,
+        ''
+    ];
+
+    // Prepare header with position numbers
+    let header = ['Position'];
+    for (let i = 1; i <= currentComponent.length; i++) {
+        header.push(i);
+    }
+    csvContent.push(header.join(','));
+
+    // Iterate over each row label and populate its respective data
+    for (let i = 0; i < Math.ceil(Math.PI * currentComponent.pipeDiameter); i++) {
+        let rowLabel = generateLabel(i);
+        let rowData = [rowLabel];
+        for (let j = 1; j <= currentComponent.length; j++) {
+            // This ensures empty strings are placed where no data exists
+            rowData.push(currentComponent.data[rowLabel] && currentComponent.data[rowLabel][j] ? (currentComponent.data[rowLabel][j] * 1000).toFixed(3) : '');
+        }
+        csvContent.push(rowData.join(','));
+    }
+
+    // Calculate minimum and average readings
+    const allValues = [].concat(...Object.values(currentComponent.data).map(row => Object.values(row)));
+    const minRead = allValues.length ? Math.min(...allValues) : 'N/A';
+    const avgRead = allValues.length ? (allValues.reduce((sum, val) => sum + val, 0) / allValues.length).toFixed(3) : 'N/A';
+    csvContent.push('', `Minimum Reading: ${minRead}`, `Average Reading: ${avgRead}`);
+
+    const blob = new Blob([csvContent.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${currentComponent.name}_thickness_data.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+function clearLocalStorage() {
+    if (confirm("Are you sure you want to clear all saved data? This action cannot be undone.")) {
+        localStorage.removeItem('components');  // Assuming 'components' is the key where data is stored
+        updateSavedList();  // Update the list display if it's being used
+        alert('All saved data has been cleared.');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    updateSavedList();
+});
 
 </script>
 
