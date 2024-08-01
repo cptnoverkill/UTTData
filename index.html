@@ -327,7 +327,7 @@ function loadData(index) {
             for (const number in currentComponent.data[label]) {
                 const input = document.querySelector(`input[data-label='${label}'][data-number='${number}']`);
                 if (input) {
-                    input.value = currentComponent.data[label][number] * 1000;  // Convert back to integer for display
+                    input.value = (currentComponent.data[label][number] * 1000).toFixed(3);  // Convert back to integer for display
                 }
             }
         }
