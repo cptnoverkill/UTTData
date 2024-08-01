@@ -165,7 +165,8 @@
             
      
             <label for="wallThickness">Nominal Wall Thickness (mils):</label>
-            <input type="number" id="wallThickness" min=100 required>
+            <input type="number" id="wallThickness" min="100" required oninput="validateWallThickness()">
+
         </div>
         <div>
             <label for="axialStart">Axial Start (inches):</label>
@@ -209,6 +210,18 @@
 <script>
 
 
+function validateWallThickness() {
+    var wallThicknessInput = document.getElementById('wallThickness');
+    var value = wallThicknessInput.value;
+    
+    if (value && parseInt(value) < 100) {
+        alert("Error: Wall thickness must be entered in mils (0.250" would be entered as 250.");
+        wallThicknessInput.value = ""; // Optionally reset the input
+        wallThicknessInput.focus(); // Set focus back to the input for correction
+    }
+}
+
+    
 let currentComponent = null;
 
 function generateLabel(index) {
