@@ -7,7 +7,7 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 1200px;
+            max-width: 750px;
             margin: 0 auto;
             padding: 20px;
             background-color: #f0f0f0;
@@ -120,8 +120,7 @@
         <div>
             <label for="componentName">Component Name:</label>
             <input type="text" id="componentName" required>
-        </div>
-        <div>
+
             <label for="pipeDiameter">Pipe Diameter (inches):</label>
             <input list="pipe-diameters" id="pipeDiameter" required placeholder="Choose diameter...">
             <datalist id="pipe-diameters">
@@ -164,20 +163,17 @@
                     <option value="60.000">
                 </datalist>
             
-        </div>
-        <div>
+     
             <label for="wallThickness">Nominal Wall Thickness (mils):</label>
             <input type="number" id="wallThickness" min=100 required>
         </div>
         <div>
             <label for="axialStart">Axial Start (inches):</label>
             <input type="number" id="axialStart" min="0" step="0.1" required>
-        </div>
-        <div>
+  
             <label for="circumferentialStart">Circumferential Start (hh:mm):</label>
             <input type="text" id="circumferentialStart" required>
-        </div>
-        <div>
+    
             <label for="length">Length (inches):</label>
             <input type="number" id="length" min="1" required>
         </div>
