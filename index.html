@@ -211,8 +211,8 @@
 
 
 function validateWallThickness() {
-    var wallThicknessInput = document.getElementById('wallThickness');
-    var value = wallThicknessInput.value;
+    let wallThicknessInput = document.getElementById('wallThickness');
+    let value = wallThicknessInput.value;
     
     if (value && parseInt(value) < 100) {
         alert("Error: Wall thickness must be entered in mils (0.250" would be entered as 250.");
