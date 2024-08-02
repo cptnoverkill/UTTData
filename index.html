@@ -14,13 +14,13 @@
             color: #333;
         }
         #tableContainer {
-            overflow-x: auto;
+            overflow-x: auto;  /* Allows horizontal scrolling */
             background-color: #fff;
         }
         table {
             border-collapse: collapse;
             width: 100%;
-            min-width: 600px;
+            min-width: 600px;  /* Ensures the table is wide enough for sticky positioning to be noticeable */
         }
         th, td {
             border: 1px solid #333;
@@ -31,7 +31,7 @@
         th.position-column, td.position-column {
             position: sticky;
             left: 0;
-            background-color: white;
+            background-color: white;  /* Ensures that the sticky column has a solid background */
             z-index: 1;
         }
         th {
@@ -39,7 +39,7 @@
             top: 0;
             background-color: #4CAF50;
             color: white;
-            z-index: 2;
+            z-index: 2;  /* Ensures that the sticky header is above other content */
         }
         input[type="number"], input[type="text"], input[list], input[type="time"] {
             width: 100%;
@@ -55,7 +55,7 @@
             box-shadow: 0 0 5px #4CAF50;
         }
         input.filled {
-            background-color: #c8e6c9;
+            background-color: #c8e6c9;  /* Light green background for filled inputs */
         }
         button {
             margin: 10px 5px;
@@ -112,7 +112,7 @@
     </style>
 </head>
 <body>
-    <h1>Ultrasonic Thickness Testing Data Entry</h1>
+    <h1>Ultrasonic Thickness Data Entry</h1>
     
     <div class="input-group">
         <div>
@@ -172,6 +172,7 @@
         </div>
     </div>
 
+    <button onclick="initializeComponent()">Initialize Component</button>
     <button onclick="generateTable()">Generate Table</button>
 
     <div id="tableContainer"></div>
@@ -188,7 +189,7 @@
 
     <div class="button-group">
         <button onclick="saveData()">Save Data</button>
-        <button id="loadDataButton" onclick="loadData()">Load Data</button>
+        <button onclick="loadData()">Load Data</button>
         <button onclick="exportCSV()">Export to CSV</button>
         <button id="clearTable" onclick="clearTable()">Clear Table</button>
         <button onclick="clearLocalStorage()" id="clearAllButton">Clear All Saved Data</button>
@@ -197,7 +198,7 @@
     <div class="saved-data-list" id="savedDataList">
         <!-- List of saved entries will appear here -->
     </div>
-
+              
     <script>
         let currentComponent = null;
 
@@ -211,13 +212,12 @@
             return label;
         }
 
-        function generateTable() {
+        function initializeComponent() {
             const componentName = document.getElementById('componentName').value;
             const pipeDiameter = parseFloat(document.getElementById('pipeDiameter').value);
             const axialStart = parseFloat(document.getElementById('axialStart').value);
             const circumferentialStart = document.getElementById('circumferentialStart').value;
             const length = parseInt(document.getElementById('length').value);
-            const numRows = Math.ceil(Math.PI * pipeDiameter);
 
             if (!componentName || isNaN(pipeDiameter) || isNaN(axialStart) || !circumferentialStart || isNaN(length)) {
                 alert('Please fill in all fields with valid values.');
@@ -230,12 +230,23 @@
                 axialStart: axialStart,
                 circumferentialStart: circumferentialStart,
                 length: length,
-                wallThickness: parseFloat(document.getElementById('wallThickness').value),  // Store as is
+                wallThickness: parseFloat(document.getElementById('wallThickness').value),
                 data: {}
             };
 
+            alert('Component initialized. Now you can generate the table.');
+        }
+
+        function generateTable() {
+            if (!currentComponent) {
+                alert('Please initialize the component first.');
+                return;
+            }
+
+            const numRows = Math.ceil(Math.PI * currentComponent.pipeDiameter);
+
             let table = '<table><tr><th class="position-column">Position</th>';
-            for (let i = 1; i <= length; i++) {
+            for (let i = 1; i <= currentComponent.length; i++) {
                 table += `<th>${i}</th>`;
             }
             table += '</tr>';
@@ -243,7 +254,7 @@
             for (let i = 0; i < numRows; i++) {
                 let rowLabel = generateLabel(i);
                 table += `<tr><td class="position-column">${rowLabel}</td>`;
-                for (let j = 1; j <= length; j++) {
+                for (let j = 1; j <= currentComponent.length; j++) {
                     table += `<td><input type='number' step='1' min='0' required inputmode='numeric' placeholder='-' data-label='${rowLabel}' data-number='${j}' onchange='updateData("${rowLabel}", ${j}, this.value)'></td>`;
                 }
                 table += '</tr>';
@@ -255,7 +266,7 @@
 
         function updateData(label, number, value) {
             const rowData = currentComponent.data[label] || {};
-            const inputValue = parseFloat(value);  // Store as is
+            const inputValue = parseFloat(value);
 
             if (value === "") {
                 delete rowData[number];
@@ -268,6 +279,13 @@
             }
 
             currentComponent.data[label] = rowData;  // Update the data store
+
+            // Update the input field's background color
+            const inputField = document.querySelector(`input[data-label='${label}'][data-number='${number}']`);
+            if (inputField) {
+                inputField.classList.toggle('filled', value !== "");
+            }
+
             updateResults();
         }
 
@@ -280,7 +298,7 @@
                     }
                 });
             });
-            const minRead = allValues.length ? Math.min(...allValues).toFixed(0) : 'N/A';
+            const minRead = allValues.length ? Math.min(...allValues) : 'N/A';
             const avgRead = allValues.length ? (allValues.reduce((sum, val) => sum + val, 0) / allValues.length).toFixed(0) : 'N/A';
             document.getElementById('minRead').textContent = `Minimum Reading: ${minRead}`;
             document.getElementById('avgRead').textContent = `Average Reading: ${avgRead}`;
@@ -305,21 +323,25 @@
             if (currentComponent) {
                 document.getElementById('componentName').value = currentComponent.name;
                 document.getElementById('pipeDiameter').value = currentComponent.pipeDiameter;
-                document.getElementById('wallThickness').value = currentComponent.wallThickness;  // Load as is
+                document.getElementById('wallThickness').value = currentComponent.wallThickness;
                 document.getElementById('axialStart').value = currentComponent.axialStart;
                 document.getElementById('circumferentialStart').value = currentComponent.circumferentialStart;
                 document.getElementById('length').value = currentComponent.length;
                 generateTable();  // This will recreate the input fields
-                // Populate the table with data
-                for (const label in currentComponent.data) {
-                    for (const number in currentComponent.data[label]) {
-                        const input = document.querySelector(`input[data-label='${label}'][data-number='${number}']`);
-                        if (input) {
-                            input.value = currentComponent.data[label][number];  // Load as is
+
+                // Populate the table with data after a short delay
+                setTimeout(() => {
+                    for (const label in currentComponent.data) {
+                        for (const number in currentComponent.data[label]) {
+                            const input = document.querySelector(`input[data-label='${label}'][data-number='${number}']`);
+                            if (input) {
+                                input.value = currentComponent.data[label][number];  // Load the integer value
+                                input.classList.add('filled');  // Add filled class for loaded values
+                            }
                         }
                     }
-                }
-                alert('Data loaded successfully!');
+                    alert('Data loaded successfully!');
+                }, 100); // Adjust the delay time as needed
             } else {
                 alert('No saved data found for this component.');
             }
@@ -364,7 +386,7 @@
                 `Pipe Diameter: ${currentComponent.pipeDiameter} inches`,
                 `Axial Start: ${currentComponent.axialStart} inches`,
                 `Circumferential Start: ${currentComponent.circumferentialStart}`,
-                `Nominal Wall Thickness: ${currentComponent.wallThickness} mils`,  // Load as is
+                `Nominal Wall Thickness: ${currentComponent.wallThickness} mils`,
                 `Comments: ${comments}`,
                 ''
             ];
@@ -382,7 +404,7 @@
                 let rowData = [rowLabel];
                 for (let j = 1; j <= currentComponent.length; j++) {
                     // This ensures empty strings are placed where no data exists
-                    rowData.push(currentComponent.data[rowLabel] && currentComponent.data[rowLabel][j] ? currentComponent.data[rowLabel][j].toFixed(3) : '');
+                    rowData.push(currentComponent.data[rowLabel] && currentComponent.data[rowLabel][j] ? currentComponent.data[rowLabel][j] : '');
                 }
                 csvContent.push(rowData.join(','));
             }
@@ -412,8 +434,50 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            updateSavedList();  // Populate the list on page load
+            updateSavedList();  // Update the saved list when the page loads
         });
+
+        function sendEmail() {
+    const templateParams = {
+        component_name: document.getElementById('componentName').value,
+        pipe_diameter: document.getElementById('pipeDiameter').value,
+        wall_thickness: document.getElementById('wallThickness').value,
+        axial_start: document.getElementById('axialStart').value,
+        circumferential_start: document.getElementById('circumferentialStart').value,
+        length: document.getElementById('length').value,
+        comments: document.getElementById('comments').value,
+        table_data: getTableData()  // Function to collect data from the table
+    };
+console.log(templateParams)
+    emailjs.send('service_b1ttqur', 'template_2uixjpd', templateParams)
+        .then(function(response) {
+           alert('SUCCESS!', response.status, response.text);
+        }, function(error) {
+           alert('FAILED...', error);
+        });
+}
+
+function getTableData() {
+    let tableData = [];
+    const rows = document.querySelectorAll('#tableContainer table tr');
+    rows.forEach(row => {
+        let rowData = [];
+        row.querySelectorAll('td input').forEach(input => {
+            rowData.push(input.value);
+        });
+        tableData.push(rowData.join(', '));
+    });
+    return tableData.join('\n');
+}
+
     </script>
+
+<script src="https://cdn.emailjs.com/dist/email.min.js"></script>
+<script type="text/javascript">
+   (function(){
+      emailjs.init("cokerdustin@gmail.com"); // Replace with your EmailJS user ID
+   })();
+</script>
+
 </body>
 </html>
