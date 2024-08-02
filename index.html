@@ -280,8 +280,8 @@
                     }
                 });
             });
-            const minRead = allValues.length ? Math.min(...allValues).toFixed(3) : 'N/A';
-            const avgRead = allValues.length ? (allValues.reduce((sum, val) => sum + val, 0) / allValues.length).toFixed(3) : 'N/A';
+            const minRead = allValues.length ? Math.min(...allValues) : 'N/A';
+            const avgRead = allValues.length ? (allValues.reduce((sum, val) => sum + val, 0) / allValues.length) : 'N/A';
             document.getElementById('minRead').textContent = `Minimum Reading: ${minRead}`;
             document.getElementById('avgRead').textContent = `Average Reading: ${avgRead}`;
         }
