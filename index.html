@@ -6,7 +6,7 @@
     <title>Ultrasonic Thickness Data Entry</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: Roboto, sans-serif;
             max-width: 750px;
             margin: 0 auto;
             padding: 20px;
@@ -48,14 +48,20 @@
             border: 1px solid #333;
             padding: 5px;
             box-sizing: border-box;
+
+
         }
         input[type="number"]:focus, input[type="text"]:focus, input[list]:focus, input[type="time"]:focus {
             outline: none;
             border-color: #4CAF50;
             box-shadow: 0 0 5px #4CAF50;
         }
-        input.filled {
+        input[type="number"], input[type="text"], input[list], input[type="time"].filled {
             background-color: #c8e6c9;  /* Light green background for filled inputs */
+        }
+
+        .inputs.filled {
+            background-color: #cecece;  /* Light green background for filled inputs */
         }
         button {
             margin: 10px 5px;
@@ -66,6 +72,7 @@
             cursor: pointer;
             font-size: 16px;
             font-weight: bold;
+            border-radius: 1rem;
         }
         button:hover {
             background-color: #258b2a;
@@ -109,19 +116,84 @@
         .results, .saved-data-list {
             margin-top: 20px;
         }
+
+        .saved-data-button {
+            font-weight: 50;
+            font-size: small;
+            background-color: rgb(53, 56, 50);
+            color: #ffffff;
+            box-shadow: 0 0 2px #000000;
+        }
+
+        /* Hide spin buttons in input fields of type number */
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .dark-mode {
+            background-color: #333;
+            color: #f0f0f0;
+        }
+
+        .dark-mode h1 {
+            background-color: #030303;
+            color: #fff;
+        }
+        .dark-mode #tableContainer {
+            background-color: #444;
+        }
+        .dark-mode th, .dark-mode body,
+        .dark-mode td {
+            border: 1px solid #777;
+            background-color: #030303;
+            color: #fff;
+        }
+
+
+        .dark-mode th {
+            background-color: #555;
+            color: #fff;
+        }
+        .dark-mode input,
+        .dark-mode input[type="number"],
+        .dark-mode input[type="text"],
+        .dark-mode input[list],
+        .dark-mode input[type="time"] {
+            background-color: #555;
+            color: #fff;
+            border: 1px solid #777;
+        }
+        .dark-mode input.filled {
+            background-color: white;
+            color: black;
+        }
+        .dark-mode.inputs.filled {
+            background-color: white;
+            color: black;
+        }
+        .dark-mode button {
+            background-color: #242424;
+            color: #ffffff;
+            border: .5px solid #555;
+        }
+        .dark-mode button:hover {
+            background-color: #555;
+        }
     </style>
 </head>
 <body>
 
     <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
-    <h1>Ultrasonic Thickness Data Entry</h1>
+    <h1 class="headerText">Ultrasonic Thickness Data Entry</h1>
     
     <div class="input-group">
         <div>
             <label for="componentName">Component Name:</label>
-            <input type="text" id="componentName" required>
-            <label for="pipeDiameter">Pipe Diameter (inches):</label>
-            <input list="pipe-diameters" id="pipeDiameter" required placeholder="Choose diameter...">
+            <input type="text" class="inputs" id="componentName" required>
+            <label for="pipeDiameter" class="inputs">Pipe Diameter (inches):</label>
+            <input list="pipe-diameters" id="pipeDiameter" type=number required numeric placeholder="Choose diameter...">
             <datalist id="pipe-diameters">
                 <option value="1.050">
                 <option value="1.315">
@@ -161,16 +233,16 @@
                 <option value="56.000">
                 <option value="60.000">
             </datalist>
-            <label for="wallThickness">Nominal Wall Thickness (mils):</label>
-            <input type="number" id="wallThickness" min="100" required>
+            <label for="wallThickness" >Nominal Wall Thickness (mils):</label>
+            <input type="number" class="inputs" id="wallThickness" min="100" required numeric>
         </div>
         <div>
             <label for="axialStart">Axial Start (inches):</label>
-            <input type="number" id="axialStart" min="0" step="0.1" required>
+            <input type="number" class="inputs" id="axialStart" min="0" step="0.1" required numeric>
             <label for="circumferentialStart">Circumferential Start (hh:mm):</label>
-            <input type="text" id="circumferentialStart" required>
-            <label for="length">Length (inches):</label>
-            <input type="number" id="length" min="1" required>
+            <input type="text" class="inputs" id="circumferentialStart" required>
+            <label for="length" >Length (inches):</label>
+            <input type="number" class="inputs" id="length" min="1" required numeric>
         </div>
     </div>
 
@@ -186,7 +258,7 @@
 
     <div class="input-group">
         <label for="comments">Comments:</label>
-        <textarea id="comments" placeholder="Enter comments here..."></textarea>
+        <textarea id="comments" class="inputs" placeholder="Enter comments here..."></textarea>
     </div>
 
     <div class="button-group">
@@ -205,6 +277,21 @@
 
         function toggleDarkMode() {
             document.documentElement.classList.toggle('dark-mode');
+            updateInputFieldColors();
+        }
+
+        function updateInputFieldColors() {
+            const inputs = document.querySelectorAll('input');
+            inputs.forEach(input => {
+                const isDarkMode = document.documentElement.classList.contains('dark-mode');
+                if (input.value !== "") {
+                    input.style.backgroundColor = isDarkMode ? '#fff' : '#c8e6c9';
+                    input.style.color = isDarkMode ? '#000' : '#222';
+                } else {
+                    input.style.backgroundColor = isDarkMode ? '#333' : '#fff';
+                    input.style.color = isDarkMode ? '#fff' : '#333';
+                }
+            });
         }
 
         let currentComponent = null;
@@ -269,6 +356,7 @@
             table += '</table>';
 
             document.getElementById('tableContainer').innerHTML = table;
+            updateInputFieldColors();
         }
 
         function updateData(label, number, value) {
@@ -290,7 +378,15 @@
             // Update the input field's background color
             const inputField = document.querySelector(`input[data-label='${label}'][data-number='${number}']`);
             if (inputField) {
+                const isDarkMode = document.documentElement.classList.contains('dark-mode');
                 inputField.classList.toggle('filled', value !== "");
+                if (value !== "") {
+                    inputField.style.backgroundColor = isDarkMode ? '#fff' : '#c8e6c9'; // Light gray for dark mode, light green for light mode
+                    inputField.style.color = isDarkMode ? '#000' : '#222'; // Black text for dark mode, dark grey for light mode
+                } else {
+                    inputField.style.backgroundColor = isDarkMode ? '#333' : '#fff'; // Dark gray for dark mode, white for light mode
+                    inputField.style.color = isDarkMode ? '#fff' : '#333'; // White text for dark mode, dark text for light mode
+                }
             }
 
             updateResults();
@@ -344,11 +440,14 @@
                             if (input) {
                                 input.value = currentComponent.data[label][number];  // Load the integer value
                                 input.classList.add('filled');  // Add filled class for loaded values
+                                input.style.backgroundColor = document.documentElement.classList.contains('dark-mode') ? '#fff' : '#c8e6c9';
+                                input.style.color = document.documentElement.classList.contains('dark-mode') ? '#000' : '#222';
                             }
                         }
                     }
                     alert('Data loaded successfully!');
                 }, 100); // Adjust the delay time as needed
+                updateResults();
             } else {
                 alert('No saved data found for this component.');
             }
@@ -361,6 +460,7 @@
             savedComponents.forEach((component, index) => {
                 const entryButton = document.createElement('button');
                 entryButton.textContent = `${component.name} - ${component.timestamp}`;
+                entryButton.classList.add('saved-data-button'); // Add a class to the button
                 entryButton.onclick = () => loadData(index);
                 list.appendChild(entryButton);
             });
@@ -446,79 +546,46 @@
         });
 
         function sendEmail() {
-    const templateParams = {
-        component_name: document.getElementById('componentName').value,
-        pipe_diameter: document.getElementById('pipeDiameter').value,
-        wall_thickness: document.getElementById('wallThickness').value,
-        axial_start: document.getElementById('axialStart').value,
-        circumferential_start: document.getElementById('circumferentialStart').value,
-        length: document.getElementById('length').value,
-        comments: document.getElementById('comments').value,
-        table_data: getTableData()  // Function to collect data from the table
-    };
-console.log(templateParams)
-    emailjs.send('service_b1ttqur', 'template_2uixjpd', templateParams)
-        .then(function(response) {
-           alert('SUCCESS!', response.status, response.text);
-        }, function(error) {
-           alert('FAILED...', error);
-        });
-}
+            const templateParams = {
+                component_name: document.getElementById('componentName').value,
+                pipe_diameter: document.getElementById('pipeDiameter').value,
+                wall_thickness: document.getElementById('wallThickness').value,
+                axial_start: document.getElementById('axialStart').value,
+                circumferential_start: document.getElementById('circumferentialStart').value,
+                length: document.getElementById('length').value,
+                comments: document.getElementById('comments').value,
+                table_data: getTableData()  // Function to collect data from the table
+            };
+            console.log(templateParams)
+            emailjs.send('service_b1ttqur', 'template_2uixjpd', templateParams)
+                .then(function(response) {
+                    alert('SUCCESS!', response.status, response.text);
+                }, function(error) {
+                    alert('FAILED...', error);
+                });
+        }
 
-function getTableData() {
-    let tableData = [];
-    const rows = document.querySelectorAll('#tableContainer table tr');
-    rows.forEach(row => {
-        let rowData = [];
-        row.querySelectorAll('td input').forEach(input => {
-            rowData.push(input.value);
-        });
-        tableData.push(rowData.join(', '));
-    });
-    return tableData.join('\n');
-}
+        function getTableData() {
+            let tableData = [];
+            const rows = document.querySelectorAll('#tableContainer table tr');
+            rows.forEach(row => {
+                let rowData = [];
+                row.querySelectorAll('td input').forEach(input => {
+                    rowData.push(input.value);
+                });
+                tableData.push(rowData.join(', '));
+            });
+            return tableData.join('\n');
+        }
 
     </script>
 
-<script src="https://cdn.emailjs.com/dist/email.min.js"></script>
-<script type="text/javascript">
-   (function(){
-      emailjs.init("cokerdustin@gmail.com"); // Replace with your EmailJS user ID
-   })();
-</script>
-
-<style>
-    .dark-mode {
-        background-color: #333;
-        color: #f0f0f0;
-    }
-    .dark-mode #tableContainer {
-        background-color: #444;
-    }
-    .dark-mode th,
-    .dark-mode td {
-        border: 1px solid #777;
-    }
-    .dark-mode th {
-        background-color: #555;
-        color: #fff;
-    }
-    .dark-mode input[type="number"],
-    .dark-mode input[type="text"],
-    .dark-mode input[list],
-    .dark-mode input[type="time"] {
-        background-color: #555;
-        color: #fff;
-        border: 1px solid #777;
-    }
-    .dark-mode button {
-        background-color: #444;
-        color: #fff;
-    }
-    .dark-mode button:hover {
-        background-color: #555;
-    }
-</style>
+    <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
+    <script type="text/javascript">
+       (function(){
+          emailjs.init("cokerdustin@gmail.com"); // Replace with your EmailJS user ID
+       })();
+    </script>
 
 </body>
 </html>
