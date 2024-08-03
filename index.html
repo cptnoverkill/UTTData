@@ -112,6 +112,8 @@
     </style>
 </head>
 <body>
+
+    <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
     <h1>Ultrasonic Thickness Data Entry</h1>
     
     <div class="input-group">
@@ -200,6 +202,11 @@
     </div>
               
     <script>
+
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark-mode');
+        }
+
         let currentComponent = null;
 
         function generateLabel(index) {
@@ -404,14 +411,14 @@
                 let rowData = [rowLabel];
                 for (let j = 1; j <= currentComponent.length; j++) {
                     // This ensures empty strings are placed where no data exists
-                    rowData.push(currentComponent.data[rowLabel] && currentComponent.data[rowLabel][j] ? currentComponent.data[rowLabel][j] : '');
+                    rowData.push(currentComponent.data[rowLabel] && currentComponent.data[rowLabel][j] ? (currentComponent.data[rowLabel][j] / 1000).toFixed(3) : '');
                 }
                 csvContent.push(rowData.join(','));
             }
 
             // Calculate minimum and average readings
-            const allValues = [].concat(...Object.values(currentComponent.data).map(row => Object.values(row)));
-            const minRead = allValues.length ? Math.min(...allValues) : 'N/A';
+            const allValues = [].concat(...Object.values(currentComponent.data).map(row => Object.values(row).map(val => val / 1000))); // Convert to decimal
+            const minRead = allValues.length ? Math.min(...allValues).toFixed(3) : 'N/A';
             const avgRead = allValues.length ? (allValues.reduce((sum, val) => sum + val, 0) / allValues.length).toFixed(3) : 'N/A';
             csvContent.push('', `Minimum Reading: ${minRead}`, `Average Reading: ${avgRead}`);
 
@@ -419,7 +426,8 @@
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.setAttribute('href', url);
-            link.setAttribute('download', `${currentComponent.name}_thickness_data.csv`);
+            const timestamp = new Date().toISOString().replace(/[:.-]/g, '_');
+            link.setAttribute('download', `${currentComponent.name}_thickness_data_${timestamp}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -478,6 +486,39 @@ function getTableData() {
       emailjs.init("cokerdustin@gmail.com"); // Replace with your EmailJS user ID
    })();
 </script>
+
+<style>
+    .dark-mode {
+        background-color: #333;
+        color: #f0f0f0;
+    }
+    .dark-mode #tableContainer {
+        background-color: #444;
+    }
+    .dark-mode th,
+    .dark-mode td {
+        border: 1px solid #777;
+    }
+    .dark-mode th {
+        background-color: #555;
+        color: #fff;
+    }
+    .dark-mode input[type="number"],
+    .dark-mode input[type="text"],
+    .dark-mode input[list],
+    .dark-mode input[type="time"] {
+        background-color: #555;
+        color: #fff;
+        border: 1px solid #777;
+    }
+    .dark-mode button {
+        background-color: #444;
+        color: #fff;
+    }
+    .dark-mode button:hover {
+        background-color: #555;
+    }
+</style>
 
 </body>
 </html>
