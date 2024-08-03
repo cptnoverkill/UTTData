@@ -198,7 +198,7 @@
             <label for="componentName">Component Name:</label>
             <input type="text" class="inputs" id="componentName" required>
             <label for="pipeDiameter" class="inputs">Pipe Diameter (inches):</label>
-            <input list="pipe-diameters" id="pipeDiameter" type=number required  placeholder="Typical diameters listed...">
+            <input list="pipe-diameters" id="pipeDiameter" type=number required  inputmode="numeric" placeholder="Typical diameters listed...">
             <datalist id="pipe-diameters">
                 <option value="1.050">
                 <option value="1.315">
@@ -240,15 +240,15 @@
             </datalist>
           
             <label for="wallThickness" >Nominal Wall Thickness (mils):</label>
-            <input type="number" class="inputs" id="wallThickness" min="100" required numeric>
+            <input type="number" class="inputs" id="wallThickness" min="100" required inputmode="numeric">
         </div>
         <div>
             <label for="axialStart">Axial Start (inches):</label>
-            <input type="number" class="inputs" id="axialStart" min="0" step="0.1" required >
+            <input type="number" class="inputs" id="axialStart" min="0" step="0.1" required inputmode="numeric">
             <label for="circumferentialStart">Circumferential Start (hh:mm):</label>
             <input type="text" class="inputs" id="circumferentialStart" required>
             <label for="length" >Length (inches):</label>
-            <input type="number" class="inputs" id="length" min="1" required >
+            <input type="number" class="inputs" id="length" min="1" required inputmode="numeric">
         </div>
     </div>
 
