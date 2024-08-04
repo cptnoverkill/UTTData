@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ct<!DOCTYPE html>
 <html lang="en">
 <head>
 <!-- Include jQuery and Select2 CSS/JS -->
@@ -46,7 +46,7 @@
             color: white;
             z-index: 2;  /* Ensures that the sticky header is above other content */
         }
-        input[type="number"], input[type="text"], input[list], input[type="time"] {
+        input[type="number"], input[type="text"], input[list], input[type="time"], select {
             width: 100%;
             color: #333;
             background-color: #fff;
@@ -56,12 +56,12 @@
 
 
         }
-        input[type="number"]:focus, input[type="text"]:focus, input[list]:focus, input[type="time"]:focus {
+        input[type="number"]:focus, input[type="text"]:focus, input[list]:focus, input[type="time"]:focus, select:focus {
             outline: none;
             border-color: #4CAF50;
             box-shadow: 0 0 5px #4CAF50;
         }
-        input[type="number"], input[type="text"], input[list], input[type="time"].filled {
+        input[type="number"], input[type="text"], input[list], input[type="time"].filled, select.filled {
             background-color: #c8e6c9;  /* Light green background for filled inputs */
         }
 
@@ -165,7 +165,8 @@
         .dark-mode input[type="number"],
         .dark-mode input[type="text"],
         .dark-mode input[list],
-        .dark-mode input[type="time"] {
+        .dark-mode input[type="time"] 
+        .dark-mode select {
             background-color: #555;
             color: #fff;
             border: 1px solid #777;
