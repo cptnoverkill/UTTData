@@ -440,6 +440,7 @@
             if (currentComponent) {
                 document.getElementById('componentName').value = currentComponent.name;
                 document.getElementById('pipeDiameter').value = currentComponent.pipeDiameter;
+                $('#pipeDiameter').trigger('change'); // Trigger the change event to update select2 UI
                 document.getElementById('wallThickness').value = currentComponent.wallThickness;
                 document.getElementById('axialStart').value = currentComponent.axialStart;
                 document.getElementById('circumferentialStart').value = currentComponent.circumferentialStart;
