@@ -486,6 +486,7 @@
                 document.getElementById('tableContainer').innerHTML = '';
                 document.getElementById('componentName').value = '';
                 document.getElementById('pipeDiameter').value = '';
+                $('#pipeDiameter').trigger('change');  // Trigger the change event to update select2 UI
                 document.getElementById('wallThickness').value = '';
                 document.getElementById('axialStart').value = '';
                 document.getElementById('circumferentialStart').value = '';
