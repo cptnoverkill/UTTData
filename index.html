@@ -393,6 +393,7 @@
             const inputField = document.querySelector(`input[data-label='${label}'][data-number='${number}']`);
             if (inputField) {
                 const isDarkMode = document.documentElement.classList.contains('dark-mode');
+                
                 inputField.classList.toggle('filled', value !== "");
                 if (value !== "") {
                     inputField.style.backgroundColor = isDarkMode ? '#fff' : '#c8e6c9'; // Light gray for dark mode, light green for light mode
@@ -445,6 +446,8 @@
                 document.getElementById('axialStart').value = currentComponent.axialStart;
                 document.getElementById('circumferentialStart').value = currentComponent.circumferentialStart;
                 document.getElementById('length').value = currentComponent.length;
+               
+
                 generateTable();  // This will recreate the input fields
 
                 // Populate the table with data after a short delay
@@ -457,6 +460,7 @@
                                 input.classList.add('filled');  // Add filled class for loaded values
                                 input.style.backgroundColor = document.documentElement.classList.contains('dark-mode') ? '#fff' : '#c8e6c9';
                                 input.style.color = document.documentElement.classList.contains('dark-mode') ? '#000' : '#222';
+                                input.classList.add('filled');  // Add filled class for loaded values
                             }
                         }
                     }
